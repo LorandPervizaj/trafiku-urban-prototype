@@ -114,3 +114,7 @@ This does not certify current operating schedules or real GPS tracking.
 **Other documented lines**, including 10A, 10B, 20, 11, 12, 13, 16, 17,
 22, 23, and 25, still need usable mapped geometry; they must not be rendered
 as moving buses just because their IDs appear in a municipal contract.
+
+### Route endpoint labels versus mapped segment boundaries
+
+The initial map used endpoints of the largest continuous OSM *fragment* as line terminals. `normalize-termini.py` now preserves these only as `mappedSegmentStart`/`mappedSegmentEnd` and uses the actual recorded OSM relation `from` and `to` tags as the line's displayed advertised destinations. These labels remain historical community mapping, not verified current street deviations. Line 2's source route may have no named stop members near its contiguous mapped roads; only if this remains true do we show a **road-only** segment without inventing boarding stops, and suppress any live estimate for that incomplete route.

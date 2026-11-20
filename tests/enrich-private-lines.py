@@ -88,12 +88,40 @@ def main():
             if any(meters(point,old[2])<28 for old in selected):
                 continue
             selected.append([str(sid),name,point,idx])
+
         selected.sort(key=lambda s:s[3])
-        # Named stops can be scarce in old route relations. A long continuous
-        # route is still useful as a map segment, but never invent stops.
-        if len(selected)==0:
-            print(f"Contracted line {line}: no named OSM stop members near road, skipped")
+        # Line 2's first OSM direction contains a connected road but lacks
+        # named stops near that component. Try its separately mapped reverse
+        # relation before accepting a road-only demonstration.
+        if line=="2" and not selected:
+            alternate=10121378
+            try:
+                other_coords,other_stops=fetch_osm_full(alternate)
+                if (len(other_coords)>=35 and path_length(other_coords)>=750
+                    and all(20.75<=p[0]<=21.7 and 42.36<=p[1]<=43.18
+                            for p in other_coords)):
+                    candidates=[]
+                    for sid,name,point in other_stops:
+                        ix,d=closest(other_coords,point)
+                        if d<=125 and not any(meters(point,s[2])<28 for s in candidates):
+                            candidates.append([str(sid),name,point,ix])
+                    if candidates:
+                        relation=alternate
+                        coords=other_coords
+                        tags=tags_by_id.get(alternate,tags)
+                        selected=sorted(candidates,key=lambda s:s[3])
+                        print("Contracted line 2: using reverse OSM geometry with named stops")
+            except Exception as exc:
+                print(f"Contracted line 2: reverse OSM unavailable ({type(exc).__name__})")
+        # A connected, explicitly tagged bus route may lack named stop
+        # members in OSM. Allow Line 2 as *road-only* if >=2.5 km, but do
+        # not invent stations, boarding positions, or live departures.
+        road_only = line=="2" and not selected and path_length(coords)>=2500
+        if not selected and not road_only:
+            print(f"Contracted line {line}: no usable named OSM stop members")
             continue
+        if road_only:
+            print("Contracted line 2: mapped roads only; no verified stop assignments")
         cumulative=[0.0]
         for a,b in zip(coords,coords[1:]):
             cumulative.append(cumulative[-1]+meters(a,b))
@@ -139,9 +167,10 @@ def main():
             "relation":relation,
             "partial":True,
             "operatorType":"contracted-private",
-            "mappedSegmentStart":selected[0][1],
-            "mappedSegmentEnd":selected[-1][1],
-            "stopsLimited":len(selected)<2
+            "mappedSegmentStart":selected[0][1] if selected else None,
+            "mappedSegmentEnd":selected[-1][1] if selected else None,
+            "stopsLimited":len(selected)<2,
+            "roadOnly":road_only
         })
         mapped.add(line)
         added.append(line)

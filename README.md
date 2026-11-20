@@ -147,3 +147,8 @@ verified geometry; we don't manufacture bus positions for those.
 additional disconnected OSM ways. Missing road connections are still missing;
 the uniform stroke does not imply a complete route. Bus and route IDs remain
 color-matched. The map filters scroll horizontally to reveal all mapped lines.
+
+
+## Displayed route termini
+
+TRIP uses the from/to destination tags recorded on each original OSM bus-route relation, rather than labeling the clipped end of a road segment as the last station. The clipped segment names are preserved separately, and the route remains explicitly partial. If Line 2 only has verifiable road geometry and no named stop members, its buses are a map-only visual simulation; the app does not invent departures or stops for it.

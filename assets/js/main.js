@@ -127,6 +127,20 @@ function renderSheet(selection) {
     return;
   }
   if(!line){activeSelection=null;renderSheet({type:"clear"});return;}
+  if(line.roadOnly) {
+    sheetContext=null;
+    $("#sheet-content").innerHTML=`<div class="row"><span class="eyebrow">MAPPED ROUTE</span>
+      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>
+      <h2>Line ${esc(line.id)}</h2>
+      <p class="unassigned-note">${esc(line.from)} → ${esc(line.to)}</p>
+      <p class="unassigned-note">Route geometry is available, but no verified boarding stops or departures are mapped yet.</p>`;
+    sheet.hidden=false;
+    sheet.classList.add("has-selection");
+    sheet.classList.remove("collapsed");
+    screen.dataset.sheet="selected";
+    applyLanguage();
+    return;
+  }
   let reverse=selection.type==="bus"&&selection.bus.direction===-1;
   if(stop?.properties.name===line.from)reverse=false;
   if(stop?.properties.name===line.to)reverse=true;

@@ -19,7 +19,7 @@ fetch_osm_full=helpers["fetch_osm_full"]
 meters=helpers["meters"]
 path_length=helpers["path_length"]
 # Prioritize opposite direction of line 4 (missing from the existing map).
-PAIRS=(("2",10121378),("3A",10166779),
+PAIRS=(("2",10121377),("2",10121378),("3A",10166779),
        ("6",10248145),("6A",10248143),
        ("7",10247950),("7A",10247952),("8",10227751),
        ("4",10120492),("1",10120832),("3",11153999),

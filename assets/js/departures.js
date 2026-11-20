@@ -1,5 +1,14 @@
 import { state } from "./state.js";
 export function departure(line, options = {}) {
+  const entry=state.lines.find(x=>x.id===line);
+  if(entry?.roadOnly) {
+    return {
+      label:"UNAVAILABLE",
+      time:"Stop data unavailable",
+      description:"This OSM road segment has no verified stops. No departure estimate can be made.",
+      mode:"unavailable"
+    };
+  }
   const index = state.lines.findIndex((x) => x.id === line);
   const mode =
     state.departureMode === "mixed"

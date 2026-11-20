@@ -21,7 +21,7 @@ jobs:
       - name: Check JavaScript and Python syntax
         run: |
           for f in assets/js/*.js assets/js/ui/*.js tests/*.js tests/*.mjs; do node --check "$f"; done
-          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py tests/enrich-route-fragments.py tests/enrich-private-lines.py
+          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py tests/enrich-route-fragments.py tests/enrich-private-lines.py tests/normalize-termini.py
       - name: Validate deterministic simulation and dataset
         run: |
           node tests/unit.mjs
@@ -38,6 +38,8 @@ jobs:
         run: python3 tests/enrich-route-fragments.py
       - name: Enrich named OSM bus stops
         run: python3 tests/enrich-stops.py
+      - name: Use advertised route termini, not clipped segment ends
+        run: python3 tests/normalize-termini.py
       - name: Validate enriched line and vehicle data
         run: |
           node tests/unit.mjs
