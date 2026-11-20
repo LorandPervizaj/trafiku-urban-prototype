@@ -53,5 +53,19 @@
     "to": "Trafo Kishnica (Kizhnica)",
     "partial": true,
     "relation": 18704771
+  },
+  {
+    "id": "1A",
+    "from": "Rrethi Fushë Kosovë",
+    "to": "Sllatinë (mbi rrethrrotullim)",
+    "partial": true,
+    "relation": 10118965
+  },
+  {
+    "id": "15",
+    "from": "Xhamia e Llapit (Tophane)",
+    "to": "Xhamia",
+    "partial": true,
+    "relation": 11153452
   }
 ]
