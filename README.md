@@ -116,3 +116,8 @@ The English/Albanian toggle persists in localStorage, the **All** chip toggles b
 - The Plan search understands loose/missing punctuation (e.g. **Rrethi 24h** and **Furra Saranda**) and supports an illustrative single walking transfer (maximum 400 m straight-line between mapped stops). It does **not** compute pedestrian streets, traffic, service timetables or exact walking time. General place queries use local stop search first and optional OpenStreetMap Photon on submission only, and can use the nearest known stop within 1 km. Photon may be unavailable or rate-limit; local mapped-stop searches still work.
 - The stop map expands beyond route-attached stations when an independently named OSM bus stop is published. Unassigned stops are displayed in muted gray and do not invent a served line. Only viewport stops are rendered, and the dataset is still incomplete.
 - The Kuleta Digjitale card references the app's actual App Store icon; the external image requires internet. Ticket payment still takes place only in the official wallet.
+
+
+## Browser regression scenarios
+
+`tests/browser-check.js` now tests the All/None toggle in both languages, in-app Settings navigation, the sample **Rrethi 24h → Furra Saranda** one-transfer search, saved journeys, midnight ticket wording, and Kuleta Digjitale artwork. `tests/live-check.js` checks the public Pages link. They require Playwright CLI and a Chromium browser; the GitHub Pages workflow runs Node logic tests and syntax checks, not these browser scripts. The live search remains a prototype based on incomplete route geometry and approximately 400 m straight-line transfer links.
