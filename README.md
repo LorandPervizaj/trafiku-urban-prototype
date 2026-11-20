@@ -131,3 +131,19 @@ Bus colors use the same token for every vehicle, filter chip, line badge and map
 ## Extended mapped route context
 
 Some OSM bus route relations contain disconnected road ways. TRIP preserves extra Line 1, 3 and 4 way fragments in `data/route-fragments.geojson`, with dotted semi-transparent route-colored strokes. Missing gaps are intentionally not joined, and simulated buses only move on validated continuous route segments. This optional layer loads during browser idle time after the map and buses are available, keeping first paint fast.
+
+
+## Citywide route coverage
+
+Municipal/private contracts document many more lines than the nine initially
+mapped. The new `tests/enrich-private-lines.py` imports independently recorded
+OSM relations for **2, 3A, 6, 6A, 7, 7A, 7B, 8, 10 and 10C**, and the reverse
+importer checks opposite directions. Each added line is only published if a
+substantial connected road segment and real named OSM stop member exist.
+Line 10A/10B/20 and the other documented private services still need
+verified geometry; we don't manufacture bus positions for those.
+
+**All route strokes are now solid.** This applies to outbound, reverse and
+additional disconnected OSM ways. Missing road connections are still missing;
+the uniform stroke does not imply a complete route. Bus and route IDs remain
+color-matched. The map filters scroll horizontally to reveal all mapped lines.

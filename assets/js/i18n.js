@@ -3,6 +3,12 @@ const sq = {
   "MAPPED BUS STOP": "STACION NË HARTË",
   "This stop is mapped in OpenStreetMap, but its bus lines are not verified.": "Ky stacion është në OpenStreetMap, por linjat që e shërbejnë nuk janë verifikuar.",
   "Search a journey": "Kërko udhëtim",
+  "Browse bus lines": "Shfleto linjat e autobusëve",
+  "Mapped routes": "Linjat në hartë",
+  "Other documented routes": "Linjat e tjera të dokumentuara",
+  "Mapped segment · Select to view": "Segment në hartë · Preke për ta parë",
+  "No verified map geometry yet": "Ende nuk ka hartë të verifikuar",
+  "Routes from public map and municipal records. Not all documented services have usable map data.": "Linjat vijnë nga OpenStreetMap dhe dokumentet e komunës. Jo të gjitha linjat e dokumentuara kanë të dhëna të përdorshme të hartës.",
   "None": "Asnjë",
   "Settings": "Cilësimet",
   "General": "Të përgjithshme",
@@ -137,6 +143,7 @@ const sq = {
 };
 const patterns = [
   [/^(\d+) lines?$/, n => n+" linja"],
+  [/^(\d+) mapped$/, n => n+" në hartë"],
   [/^Transfer near (.+) → (.+) · approx\. (\d+) m between mapped stops$/, (a,b,n)=>"Ndërrim afër "+a+" → "+b+" · rreth "+n+" m mes stacioneve"],
   [/^Lines ([0-9A-Z]+) \+ ([0-9A-Z]+)$/, (a,b)=>"Linjat "+a+" + "+b],
   [/^Change from line ([0-9A-Z]+) to ([0-9A-Z]+)$/, (a,b)=>"Ndërro nga linja "+a+" në "+b],

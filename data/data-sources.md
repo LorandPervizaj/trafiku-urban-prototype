@@ -92,3 +92,25 @@ TRIP separately imports the opposite-direction OpenStreetMap route relations whe
 ## Extra mapped route pieces
 
 For primary central lines 1, 3, and 4, TRIP preserves additional disjoint street-way members of the same OSM route relations in `route-fragments.geojson`. Fragments are rendered as lighter context strokes and are **not used for vehicle movement or direct trip-planning geometry**. Missing road joins are never drawn. The snapshot is added incrementally during deployment and is loaded only after the core map is interactive. This helps reveal additional OSM-mapped route portions, especially Line 4, without claiming a continuous official full route.
+
+## Contracted private routes (November 2026 expansion)
+
+TRIP originally mapped nine lines from the operator's timetable, which is
+not a complete Prishtina network. Municipal private-provider contracts dated
+2024 document additional line IDs. See
+https://www.prishtinaonline.com/lajmet/4226/kryeqyteti-nenshkruan-kontrate-8-vjecare-me-24-operatore-private-te-transportit-publik
+and the municipality's July 2026 diversion list:
+https://prishtina.rks-gov.net/news/njoftim-per-devijimin-e-perkohshem-te-linjave-te-autobuseve/.
+
+The importer `tests/enrich-private-lines.py` adds **2, 3A, 6, 6A, 7,
+7A, 7B, 8, 10, 10C** where the saved OSM route relations yield adequate
+continuous road geometry and real named stop members. Coordinates, mapped
+segment limits, and line associations are derived from OSM relation members,
+not fabricated. Each is flagged as `partial:true`; terminal labels from
+OSM relation tags are not assumed to coincide with the clipped segment's
+actual map endpoints. A missing relation never produces fake moving vehicles.
+This does not certify current operating schedules or real GPS tracking.
+
+**Other documented lines**, including 10A, 10B, 20, 11, 12, 13, 16, 17,
+22, 23, and 25, still need usable mapped geometry; they must not be rendered
+as moving buses just because their IDs appear in a municipal contract.

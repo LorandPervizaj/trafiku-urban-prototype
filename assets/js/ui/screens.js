@@ -1,6 +1,7 @@
 import { state, esc } from "../state.js";
 import { icon } from "../icons.js";
 import { lineStyle } from "../line-colors.js";
+import { DOCUMENTED_UNMAPPED } from "../network-catalog.js";
 import { departure } from "../departures.js";
 import { findRoutes, findStop } from "../routes.js";
 const action = (text, id, cls = "button") =>
@@ -13,6 +14,21 @@ const header = (title, subtitle, back) =>
     <h1 tabindex="-1">${title}</h1><p>${subtitle}</p>
     </div><button type="button" class="icon-button screen-settings" data-action="open-settings" aria-label="Open settings">${icon("settings")}</button>
     </div></header>`;
+
+function networkCatalog(){
+  const active = state.lines.map(line=>`<button type="button" class="network-line" data-show-line="${esc(line.id)}">
+    <span class="network-line-id" style="${lineStyle(line.id)}">${esc(line.id)}</span>
+    <span class="network-line-desc"><b>Line ${esc(line.id)}</b><small>Mapped segment · Select to view</small></span>
+  </button>`).join("");
+  const unmapped=DOCUMENTED_UNMAPPED.filter(x=>!state.lines.some(l=>l.id===x)).map(id=>
+    `<div class="network-line network-line-unmapped"><span class="network-line-id">${esc(id)}</span>
+     <span class="network-line-desc"><b>Line ${esc(id)}</b><small>No verified map geometry yet</small></span></div>`).join("");
+  return `<details class="network-catalog"><summary>Browse bus lines <span class="network-count">${state.lines.length} mapped</span></summary>
+    <p class="catalog-info">Routes from public map and municipal records. Not all documented services have usable map data.</p>
+    <h3>Mapped routes</h3><div class="network-grid">${active}</div>
+    ${unmapped?`<h3>Other documented routes</h3><div class="network-grid">${unmapped}</div>`:""}
+  </details>`;
+}
 export function selectedStop() {
   return (
     findStop(state.journey.from) ||
@@ -21,7 +37,7 @@ export function selectedStop() {
   );
 }
 export function plan() {
-  return `${header("Plan your ride", "Find the right bus, stop and direction.")}<span class="eyebrow">YOUR JOURNEY</span><p class="search-hint">Search bus stops or places in Prishtina</p><div class="search-feedback" id="search-feedback" role="status" aria-live="polite" hidden></div><form id="journey-form" class="card journey-form"><label class="field"><span>FROM</span><input name="from" list="destinations" value="${esc(state.journey.from)}" autocomplete="off" placeholder="Stop or place" required></label><label class="field"><span>TO</span><input name="to" list="destinations" value="${esc(state.journey.to)}" autocomplete="off" placeholder="Where to?" required></label><button type="button" class="icon-button swap" data-action="swap" aria-label="Reverse journey">${icon("swap")}</button><datalist id="destinations">${state.stops.map((s) => `<option value="${esc(s.properties.name)}"></option>`).join("")}</datalist><button class="button" type="submit">Find routes</button></form><div class="section-title"><h2>Your usual journeys</h2>${action("See all", "saved", "text-button")}</div>${state.prefs.saved.length ? savedCard(state.prefs.saved[0], 0) : `<div class="card"><p>No saved journeys yet.</p><small>Plan a ride and save it for next time.</small></div>`}<div class="section-title"><h2>Stops to explore</h2><small>Local map</small></div>${state.stops.slice(0, 4).map(stopButton).join("")}<p class="notice">Stops and roads come from OpenStreetMap; coverage remains partial. For unfamiliar place names, TRIP can check an online place index. Routes and bus times are simulated.</p>`;
+  return `${header("Plan your ride", "Find the right bus, stop and direction.")}<span class="eyebrow">YOUR JOURNEY</span><p class="search-hint">Search bus stops or places in Prishtina</p><div class="search-feedback" id="search-feedback" role="status" aria-live="polite" hidden></div><form id="journey-form" class="card journey-form"><label class="field"><span>FROM</span><input name="from" list="destinations" value="${esc(state.journey.from)}" autocomplete="off" placeholder="Stop or place" required></label><label class="field"><span>TO</span><input name="to" list="destinations" value="${esc(state.journey.to)}" autocomplete="off" placeholder="Where to?" required></label><button type="button" class="icon-button swap" data-action="swap" aria-label="Reverse journey">${icon("swap")}</button><datalist id="destinations">${state.stops.map((s) => `<option value="${esc(s.properties.name)}"></option>`).join("")}</datalist><button class="button" type="submit">Find routes</button></form><div class="section-title"><h2>Your usual journeys</h2>${action("See all", "saved", "text-button")}</div>${state.prefs.saved.length ? savedCard(state.prefs.saved[0], 0) : `<div class="card"><p>No saved journeys yet.</p><small>Plan a ride and save it for next time.</small></div>`}<div class="section-title"><h2>Stops to explore</h2><small>Local map</small></div>${state.stops.slice(0, 4).map(stopButton).join("")}${networkCatalog()}<p class="notice">Stops and roads come from OpenStreetMap; coverage remains partial. For unfamiliar place names, TRIP can check an online place index. Routes and bus times are simulated.</p>`;
 }
 export function routes() {
   const results = findRoutes(state.journey.from, state.journey.to);

@@ -1200,3 +1200,31 @@ html[data-reduced-motion="true"] .bus-vehicle { transition:none!important; }
   #map .leaflet-marker-icon.bus-marker{transition:none!important;}
 }
 html[data-reduced-motion="true"] #map .leaflet-marker-icon.bus-marker{transition:none!important;}
+
+/* Single consistent route-line language: every mapped service segment is solid.
+   Disconnected ways remain separate; the UI no longer suggests a separate
+   category of bus route through dash or dot patterns. */
+.leaflet-interactive[stroke-dasharray]{stroke-dasharray:none!important;}
+/* Overflow hint for the larger mixed municipal/private route filter list. */
+#filters{scroll-snap-type:x proximity;scroll-padding-inline:3px;}
+#filters .chip{scroll-snap-align:start;}
+
+/* Opt-in directory for both mapped lines and documented-but-unmapped routes.
+   No fabricated route data is exposed through these entries. */
+.network-catalog{margin:17px 0 12px;padding:2px 14px 15px;border-radius:17px;background:var(--paper);border:1px solid var(--line);}
+.network-catalog>summary{display:flex;justify-content:space-between;align-items:center;padding:16px 2px;font-weight:800;font-size:15px;cursor:pointer;list-style:none;}
+.network-catalog>summary::-webkit-details-marker{display:none;}
+.network-catalog>summary:after{content:"⌄";font-size:22px;color:var(--muted);margin-left:8px;transition:transform .2s;}
+.network-catalog[open]>summary:after{transform:rotate(180deg);}
+.network-count{margin-left:auto;font-size:11px;color:var(--muted);font-weight:700;}
+.network-catalog .catalog-info{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 17px;}
+.network-catalog h3{font-size:13px;margin:18px 0 10px;}
+.network-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.network-line{display:flex;align-items:center;gap:8px;min-width:0;min-height:58px;padding:8px;border-radius:12px;background:var(--fog);border:1px solid var(--line);text-align:left;color:var(--ink);}
+button.network-line:active{transform:scale(.98);}
+.network-line-id{display:grid;place-items:center;min-width:36px;height:36px;border-radius:9px;background:var(--line-color,#5F6F78);color:var(--line-text,#fff);font-size:12px;font-weight:900;}
+.network-line-desc{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.network-line-desc b{font-size:12px;}
+.network-line-desc small{font-size:10px;line-height:1.25;color:var(--muted);}
+.network-line-unmapped .network-line-id{background:#9EA7A3;color:#151919;}
+@media(max-width:365px){.network-grid{grid-template-columns:1fr;}}

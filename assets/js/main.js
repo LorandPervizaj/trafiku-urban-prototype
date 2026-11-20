@@ -259,6 +259,25 @@ document.addEventListener("click", (e) => {
     renderSheet();
     return;
   }
+  const showLine=e.target.closest("[data-show-line]");
+  if(showLine){
+    const id=showLine.dataset.showLine;
+    if(!state.lines.some(l=>l.id===id))return;
+    state.prefs.lines=[id];
+    state.prefs.allLines=false;
+    savePrefs();
+    filters();
+    refreshLayers();
+    activeSelection=null;
+    navigate("map");
+    requestAnimationFrame(()=>{
+      document.querySelector(`#filters [data-filter="${id}"]`)?.scrollIntoView({
+        behavior:state.prefs.reducedMotion?"instant":"smooth",
+        block:"nearest",inline:"center"
+      });
+    });
+    return;
+  }
   const line = e.target.closest("[data-line]");
   if (line) {
     state.selected = findRoutes(state.journey.from, state.journey.to).find(

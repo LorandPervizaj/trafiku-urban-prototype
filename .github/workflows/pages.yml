@@ -21,7 +21,7 @@ jobs:
       - name: Check JavaScript and Python syntax
         run: |
           for f in assets/js/*.js assets/js/ui/*.js tests/*.js tests/*.mjs; do node --check "$f"; done
-          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py tests/enrich-route-fragments.py
+          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py tests/enrich-route-fragments.py tests/enrich-private-lines.py
       - name: Validate deterministic simulation and dataset
         run: |
           node tests/unit.mjs
@@ -30,12 +30,20 @@ jobs:
           node tests/colors.mjs
       - name: Add additional verified OSM segments when available
         run: python3 tests/expand-lines.py
+      - name: Import mapped contracted private bus lines
+        run: python3 tests/enrich-private-lines.py
       - name: Enrich opposite-direction OSM segments
         run: python3 tests/enrich-directions.py
       - name: Preserve disconnected route context
         run: python3 tests/enrich-route-fragments.py
       - name: Enrich named OSM bus stops
         run: python3 tests/enrich-stops.py
+      - name: Validate enriched line and vehicle data
+        run: |
+          node tests/unit.mjs
+          node tests/route-search.mjs
+          node tests/colors.mjs
+          node tests/network.mjs
       - name: Save verified OSM route snapshot
         shell: bash
         run: |

@@ -132,7 +132,9 @@ export function refreshLayers() {
           color:colorForLine(piece.properties.line),
           weight:state.prefs.lines.length===1?2.8:1.9,
           opacity:state.prefs.lines.length===1?.62:.31,
-          dashArray:"3 6",
+          // All services have continuous solid styling; missing data remains
+          // disconnected rather than implying an alternative service type.
+          dashArray:null,
         }
       }).addTo(fragmentLayer);
     }
@@ -144,7 +146,7 @@ export function refreshLayers() {
           color: colorForLine(f.properties.line),
           weight: state.prefs.lines.length===1 ? 4.6 : 3,
           opacity: state.prefs.lines.length===1 ? 0.92 : 0.60,
-          dashArray: f.properties.direction==="return" ? "6 5" : null,
+          dashArray:null,
         },
       }).addTo(routeLayer);
   refreshStopMarkers();
@@ -217,13 +219,18 @@ export function drawPreview(element, line, stop) {
     attribution: "&copy; OpenStreetMap",
     maxZoom: 19,
   }).addTo(preview);
-  const f = state.routes.find((f) => f.properties.line === line);
-  if (f) {
-    const layer = L.geoJSON(f, {
-      style: { color: "#17624d", weight: 4 },
-    }).addTo(preview);
-    preview.fitBounds(layer.getBounds(), { padding: [18, 18] });
-  } else preview.setView([42.658, 21.161], 13);
+  const ids = String(line||"").split(">");
+  const features=state.routes.filter(f=>ids.includes(f.properties.line));
+  if(features.length){
+    const bounds=L.latLngBounds([]);
+    for(const f of features){
+      const l=L.geoJSON(f,{
+        style:{color:colorForLine(f.properties.line),weight:4,opacity:.85}
+      }).addTo(preview);
+      bounds.extend(l.getBounds());
+    }
+    preview.fitBounds(bounds,{padding:[18,18]});
+  } else preview.setView([42.658,21.161],13);
   if (stop) {
     L.circleMarker(
       [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],
