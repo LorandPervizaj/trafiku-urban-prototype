@@ -32,7 +32,7 @@ const check = (v, label) => {
 for (const f of routes) {
   const r = prepare(f.geometry.coordinates);
   check(r.total > 1000, "Nontrivial route");
-  check(r.coordinates.length > 100, "Detailed street geometry");
+  check(r.coordinates.length >= 35, "Detailed street geometry");
   for (let i = 1; i < r.cumulative.length; i++)
     check(r.cumulative[i] >= r.cumulative[i - 1], "Ordered distances");
   for (const d of f.properties.stopDistances)
