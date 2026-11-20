@@ -1,9 +1,11 @@
 import { state, persist, esc } from "./state.js";
 import { createSimulation } from "./simulation.js";
 import { translate } from "./i18n.js";
+import { colorForLine, lineStyle } from "./line-colors.js";
 let map, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
 let stopMarkersVisible = 0;
+let viewportBounds = null;
 let choose = () => {};
 export function initMap(onChoose) {
   choose = onChoose;
@@ -43,11 +45,13 @@ export function initMap(onChoose) {
   busLayer = L.layerGroup().addTo(map);
   map.on("click", () => choose({ type: "clear" }));
   map.on("moveend", () => {
+    viewportBounds=map.getBounds().pad(.18);
     refreshStopMarkers();
     const c = map.getCenter();
     state.prefs.position = [c.lat, c.lng, map.getZoom()];
     persist();
   });
+  viewportBounds=map.getBounds().pad(.18);
   refreshLayers();
   simulation = createSimulation(state.routes, (b) => {
     let marker = markers.get(b.id);
@@ -55,7 +59,7 @@ export function initMap(onChoose) {
       marker = L.marker([b.position[1], b.position[0]], {
         icon: L.divIcon({
           className: "bus-marker",
-          html: `<span class="bus-pin">
+          html: `<span class="bus-pin" style="${lineStyle(b.line)}">
             <svg class="bus-vehicle" viewBox="0 0 26 43" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <rect class="bus-wheel" x="2" y="9" width="4" height="9" rx="1.6"/>
               <rect class="bus-wheel" x="20" y="9" width="4" height="9" rx="1.6"/>
@@ -89,7 +93,12 @@ export function initMap(onChoose) {
       markers.set(b.id, marker);
       if (state.prefs.lines.includes(b.line)) busLayer.addLayer(marker);
     }
-    if (b.position) marker.setLatLng([b.position[1], b.position[0]]);
+    if (b.position) {
+      // Animation is elapsed-time based; avoid costly DOM work for buses
+      // outside the visible map. They catch up when brought back into view.
+      const point=L.latLng(b.position[1],b.position[0]);
+      if (viewportBounds?.contains(point)) marker.setLatLng(point);
+    }
     const el = marker.getElement();
     if (el) {
       // Accessibility attributes only change on state/language changes, not every frame.
@@ -113,9 +122,10 @@ export function refreshLayers() {
     if (state.prefs.showRoutes && state.prefs.lines.includes(f.properties.line))
       L.geoJSON(f, {
         style: {
-          color: f.properties.line === "4" ? "#17624d" : "#6e8277",
-          weight: f.properties.line === "4" ? 4 : 3,
-          opacity: 0.8,
+          color: colorForLine(f.properties.line),
+          weight: state.prefs.lines.length===1 ? 4.6 : 3,
+          opacity: state.prefs.lines.length===1 ? 0.92 : 0.60,
+          dashArray: f.properties.direction==="return" ? "6 5" : null,
         },
       }).addTo(routeLayer);
   refreshStopMarkers();
@@ -198,7 +208,7 @@ export function drawPreview(element, line, stop) {
   if (stop) {
     L.circleMarker(
       [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],
-      { radius: 6, color: "#17624d", fillColor: "white", fillOpacity: 1 },
+      { radius: 6, color: colorForLine(String(line||"").split(">")[0]), fillColor: "white", fillOpacity: 1 },
     ).addTo(preview);
     preview.setView(
       [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],

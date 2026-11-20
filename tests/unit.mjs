@@ -69,7 +69,7 @@ for (let i = 0; i < 6000; i++) {
   callback(now);
 }
 check(maxStep < 0.3, "No interpolation jumps at easing boundaries");
-check(simulation.buses.length === routes.reduce((sum, route)=>sum+fleetCount(route.properties.line),0), "Configured fleet counts match route data");
+check(simulation.buses.length === [...new Set(routes.map(r=>r.properties.line))].reduce((sum,line)=>sum+fleetCount(line),0), "Configured fleet counts shared across mapped directions");
 check(
   simulation.buses.every(
     (b) => b.progress >= 0 && b.progress <= b.route.total + 0.1,

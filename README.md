@@ -121,3 +121,8 @@ The English/Albanian toggle persists in localStorage, the **All** chip toggles b
 ## Browser regression scenarios
 
 `tests/browser-check.js` now tests the All/None toggle in both languages, in-app Settings navigation, the sample **Rrethi 24h → Furra Saranda** one-transfer search, saved journeys, midnight ticket wording, and Kuleta Digjitale artwork. `tests/live-check.js` checks the public Pages link. They require Playwright CLI and a Chromium browser; the GitHub Pages workflow runs Node logic tests and syntax checks, not these browser scripts. The live search remains a prototype based on incomplete route geometry and approximately 400 m straight-line transfer links.
+
+
+## Directional map lines and stable colors
+
+Bus colors use the same token for every vehicle, filter chip, line badge and mapped street segment. Official Trafiku Urban E-Bus color convention: **Line 1 yellow, Line 3 green, Line 4 blue** (https://trafikurban-pr.com/2022/ebus/). Other line colors are TRIP-specific demo choices documented in `assets/js/line-colors.js`. A solid polyline represents the first mapped direction; where a second OSM relation is available, its partial direction is shown as a thinner dashed stroke of the same color. Vehicles are simulated with continuous elapsed-time interpolation, a capped refresh cadence, separate direction geometry where available, and precomputed shared paths. At clipped OSM segment endpoints, a smooth return demonstration is still used; this is not a verified real terminus. Do not treat map animation as GPS tracking.

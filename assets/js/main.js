@@ -1,6 +1,7 @@
 import { state, persist, reset, applyTheme, esc } from "./state.js";
 import { storageAvailable } from "./storage.js";
 import { icon } from "./icons.js";
+import { lineStyle } from "./line-colors.js";
 import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
@@ -56,13 +57,13 @@ function filters() {
   if(container.children.length!==expected ||
     !Array.from(container.children).slice(1).every((el,i)=>el.dataset.filter===ids[i])) {
     container.innerHTML=`<button class="chip chip-all" data-filter="all" aria-pressed="${allOn}">All</button>`+
-      ids.map(id=>`<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("");
+      ids.map(id=>`<button class="chip line-chip" style="${lineStyle(id)}" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}"><span class="line-chip-dot" aria-hidden="true"></span>${id}</button>`).join("");
   }
   const toggle=container.querySelector('[data-filter="all"]');
   toggle.textContent=allOn?"None":"All";
   toggle.setAttribute("aria-pressed",String(allOn));
   toggle.setAttribute("aria-label",allOn?"None":"All");
-  toggle.dataset.allState=allOn?"all":"partial";
+  toggle.dataset.allState=allOn?"all":state.prefs.lines.length?"partial":"none";
   for(const element of container.querySelectorAll('[data-filter]:not([data-filter="all"])')) {
     const selected=state.prefs.lines.includes(element.dataset.filter);
     element.setAttribute("aria-pressed",String(selected));
@@ -137,7 +138,7 @@ function renderSheet(selection) {
       <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button>
     </div><h2>${esc(title)}</h2>
     <button class="departure-row" id="sheet-departure">
-      <span class="line-badge">${esc(line.id)}</span>
+      <span class="line-badge" style="${lineStyle(line.id)}">${esc(line.id)}</span>
       <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
       <span class="time">${esc(d.time)}</span>
     </button>`;

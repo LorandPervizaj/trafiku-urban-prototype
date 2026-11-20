@@ -84,3 +84,7 @@ TRIP now imports named OSM bus-stop nodes and bus platforms within Greater Prish
 ### November 2026 stop importer revision
 
 The fallback importer reads the officially documented OpenStreetMap API `relation/<id>/full` for lines 2, 3A, 6, 6A, 7, 7A, 7B, 8, 10 and 10C and extracts named node stop/platform relation members. It is an educational route-based location snapshot, not a complete inventory of public transit platforms. These locations are added as unassigned until a mapped/verified route serves them. The loader never guesses a line association. Source OSM community contributors, ODbL.
+
+## Opposite-direction route segments (November 20, 2026)
+
+TRIP separately imports the opposite-direction OpenStreetMap route relations where they have continuous road geometry and two mapped stops. The particularly important Line 4 relation is **10120492**, alongside the original 10120493. Candidate reverse relations: 1=10120832, 3=11153999, 3B=10187117, 3C=11160462, 1A=10118966, and 15=11153453. Each imported segment is marked `direction:return` and retains an OSM relation ID and the `partial:true` disclaimer. Stops are only associated with a line when projected onto the retained path within 110 meters. This expands visible station coverage without inventing connections. **These are historical OSM snapshots, not verified current street-by-street operating routes.** Simulation bus counts are grouped by line, not multiplied by direction features.

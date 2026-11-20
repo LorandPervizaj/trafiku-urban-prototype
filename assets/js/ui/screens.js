@@ -1,5 +1,6 @@
 import { state, esc } from "../state.js";
 import { icon } from "../icons.js";
+import { lineStyle } from "../line-colors.js";
 import { departure } from "../departures.js";
 import { findRoutes, findStop } from "../routes.js";
 const action = (text, id, cls = "button") =>
@@ -31,7 +32,7 @@ export function routes() {
             const d = departure(r.first || r.id, { reverse: r.reverse });
             const transfer = r.type === "transfer";
             const walk = transfer ? `<div class="transfer-brief">Transfer near ${esc(r.transfer.from)} → ${esc(r.transfer.to)} · approx. ${r.transfer.meters} m between mapped stops</div>` : "";
-            return `<button class="card result-card ${r.id === results[0].id ? "dark-card" : ""}" data-line="${esc(r.id)}"><div class="row"><span class="line-badge">${transfer ? esc(r.first) : esc(r.id)}</span><span><b>${transfer ? `Lines ${esc(r.first)} + ${esc(r.second)}` : `Line ${esc(r.id)}`}</b><small>Towards ${esc(r.direction)}</small></span><span style="margin-left:auto">${icon("chevron")}</span></div>${walk}<span class="status">${d.label}</span><b>${d.time}</b>${r.reverse ? "<small>Return direction is illustrative; check local stop signage.</small>" : ""}</button>`;
+            return `<button class="card result-card ${r.id === results[0].id ? "dark-card" : ""}" data-line="${esc(r.id)}"><div class="row"><span class="line-badge" style="${lineStyle(r.first || r.id)}">${transfer ? esc(r.first) : esc(r.id)}</span><span><b>${transfer ? `Lines ${esc(r.first)} + ${esc(r.second)}` : `Line ${esc(r.id)}`}</b><small>Towards ${esc(r.direction)}</small></span><span style="margin-left:auto">${icon("chevron")}</span></div>${walk}<span class="status">${d.label}</span><b>${d.time}</b>${r.reverse ? "<small>Return direction is illustrative; check local stop signage.</small>" : ""}</button>`;
           })
           .join("")
       : `<div class="empty">${icon("plan")}<h3>No mapped connection found</h3><p>Try a nearby stop or another destination. TRIP currently uses partial bus routes and walking transfers of up to 400 m.</p>${action("Edit journey", "plan", "text-button")}</div>`

@@ -1149,3 +1149,41 @@ html[data-reduced-motion="true"] .bus-vehicle { transition:none!important; }
 
 .language-toggle:before{z-index:0;}
 .language-toggle button{z-index:1;background:transparent;}
+
+/* LINE COLOR SYSTEM (Nov 2026): official convention for 1/3/4,
+   TRIP design colors for other lines. Never rely on color alone. */
+.bus-pin{--line-color:#4D697F;--line-text:#fff;}
+.bus-pin .bus-body-shape,
+.bus-marker.selected .bus-body-shape{fill:var(--line-color)!important;stroke:#fff;stroke-width:1.35;}
+.bus-pin .bus-line-tag,
+.bus-marker.selected .bus-line-tag{background:var(--line-color)!important;color:var(--line-text)!important;box-shadow:0 1px 3px #0004;}
+.bus-marker.selected .bus-vehicle{filter:drop-shadow(0 1px 5px var(--line-color));}
+.bus-vehicle{transition:transform 48ms linear;}
+/* Leaflet uses transform to position each marker. A short linear
+   transform transition smooths individual marker steps at ~40Hz. */
+.leaflet-marker-icon.bus-marker:not(.leaflet-zoom-animated){transition:transform 34ms linear;}
+.line-badge[style*="--line-color"]{background:var(--line-color);color:var(--line-text);font-variant-numeric:tabular-nums;}
+#filters .line-chip{--line-color:#4D697F;--line-text:#fff;display:inline-flex;align-items:center;gap:6px;justify-content:center;min-width:48px;transition:color .27s ease,border-color .27s ease,transform .18s ease,background-color .27s ease;}
+#filters .line-chip::before{background:var(--line-color)!important;opacity:0;}
+#filters .line-chip[aria-pressed="true"]{color:var(--line-text)!important;border-color:var(--line-color)!important;background:var(--line-color)!important;}
+#filters .line-chip[aria-pressed="true"]::before{opacity:1;}
+#filters .line-chip[aria-pressed="false"]{background:var(--paper)!important;border-color:var(--line);color:var(--ink)!important;}
+#filters .line-chip-dot{display:inline-block;flex:none;width:7px;height:7px;background:var(--line-color);border-radius:50%;box-shadow:0 0 0 1px #fff8;transition:background-color .27s ease;}
+#filters .line-chip[aria-pressed="true"] .line-chip-dot{background:var(--line-text);}
+/* The all/none action is two different calm gradients. Layer opacity,
+   not gradient stops, is transitioned to avoid hard color jumps. */
+#filters .chip-all{background:#3C4653!important;color:#fff!important;border-color:transparent!important;min-width:80px!important;font-weight:800;}
+#filters .chip-all::before,#filters .chip-all::after{position:absolute;inset:0;content:"";z-index:-1;border-radius:inherit;transition:opacity .32s cubic-bezier(.22,1,.36,1);}
+#filters .chip-all::before{background:linear-gradient(118deg,#0C7A69,#228BB4)!important;opacity:1;}
+#filters .chip-all::after{background:linear-gradient(118deg,#3D4250,#636B7D)!important;opacity:0;}
+#filters .chip-all[data-all-state="all"]::before{opacity:0!important;}
+#filters .chip-all[data-all-state="all"]::after{opacity:1!important;}
+#filters .chip-all[data-all-state="none"]::before{opacity:1!important;}
+#filters .chip-all[data-all-state="none"]::after{opacity:0!important;}
+#filters .chip-all[data-all-state="partial"]::before{opacity:.80!important;}
+#filters .chip-all[data-all-state="partial"]::after{opacity:.20!important;}
+#filters .chip-all[aria-pressed="true"],#filters .chip-all[aria-pressed="false"]{color:#fff!important;border-color:transparent!important;background:#3D4250!important;}
+@media(prefers-reduced-motion:reduce){
+  .leaflet-marker-icon.bus-marker:not(.leaflet-zoom-animated),
+  .bus-vehicle,#filters .chip-all::before,#filters .chip-all::after{transition:none!important;}
+}
