@@ -1,12 +1,19 @@
 [
   {
-    "id": "4",
-    "from": "Parku i Gërmise",
-    "to": "Pejton përballë ish - Ramiz Sadikut",
-    "officialFrom": "Xhamia në Mat",
-    "officialTo": "Parku i Gërmisë",
+    "id": "1",
+    "from": "Dardani \"Ibër-Lepenci\"",
+    "to": "Rrethi \"Maxi 24h\" (Rr.B)",
+    "officialFrom": "St. Hekurudhor",
+    "officialTo": "Royal Mall",
     "partial": true,
-    "relation": 10120493
+    "relation": 10120831
+  },
+  {
+    "id": "1A",
+    "from": "Rrethi Fushë Kosovë",
+    "to": "Sllatinë (mbi rrethrrotullim)",
+    "partial": true,
+    "relation": 10118965
   },
   {
     "id": "3",
@@ -18,20 +25,17 @@
     "relation": 11153998
   },
   {
-    "id": "1",
-    "from": "Dardani \"Ibër-Lepenci\"",
-    "to": "Rrethi \"Maxi 24h\" (Rr.B)",
-    "officialFrom": "St. Hekurudhor",
-    "officialTo": "Royal Mall",
+    "id": "3A",
+    "from": "Çeshmja në Mat",
+    "to": "Kodra e Trimave - Rr. 27 Nëntori",
+    "officialFrom": "Çeshmja në Mat",
+    "officialTo": "Kodra e Trimave - Rr. 27 Nëntori",
+    "relation": 10166778,
     "partial": true,
-    "relation": 10120831
-  },
-  {
-    "id": "7C",
-    "from": "Sh. M. L. Ekonomike",
-    "to": "Përballë Kopshitit \"Cicërimat\"",
-    "partial": true,
-    "relation": 11160278
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Rr. Agim Ramadani - Përballë Teatrit",
+    "mappedSegmentEnd": "Rr. 27 Nëntori - Stacioni 1",
+    "stopsLimited": false
   },
   {
     "id": "3B",
@@ -48,18 +52,124 @@
     "relation": 11160426
   },
   {
-    "id": "19",
-    "from": "Hajvali (Hyrja)",
-    "to": "Trafo Kishnica (Kizhnica)",
+    "id": "4",
+    "from": "Parku i Gërmise",
+    "to": "Pejton përballë ish - Ramiz Sadikut",
+    "officialFrom": "Xhamia në Mat",
+    "officialTo": "Parku i Gërmisë",
     "partial": true,
-    "relation": 18704771
+    "relation": 10120493
   },
   {
-    "id": "1A",
-    "from": "Rrethi Fushë Kosovë",
-    "to": "Sllatinë (mbi rrethrrotullim)",
+    "id": "6",
+    "from": "Arbëria/Dragodan",
+    "to": "Lagjja e Spitalit",
+    "officialFrom": "Arbëria/Dragodan",
+    "officialTo": "Lagjja e Spitalit",
+    "relation": 10248144,
     "partial": true,
-    "relation": 10118965
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Rr. Agim Ramadani - Fakulteti Ekonomik",
+    "mappedSegmentEnd": "Rr. \"Ahmet Krasniqi\" - te Zyra Austriake",
+    "stopsLimited": false
+  },
+  {
+    "id": "6A",
+    "from": "Tregu i Gjelber",
+    "to": "Shkabaj, Shkolla Dituria",
+    "officialFrom": "Tregu i Gjelber",
+    "officialTo": "Shkabaj, Shkolla Dituria",
+    "relation": 10248142,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Dardani \"Ibër-Lepenci\"",
+    "mappedSegmentEnd": "SH.F.M.U \"Dituria\"",
+    "stopsLimited": false
+  },
+  {
+    "id": "7",
+    "from": "Kolovica, Rr. Haxhi Zeka",
+    "to": "Emshir, SH.F \"7 Marsi\"",
+    "officialFrom": "Kolovica, Rr. Haxhi Zeka",
+    "officialTo": "Emshir, SH.F \"7 Marsi\"",
+    "relation": 10247949,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Dardania",
+    "mappedSegmentEnd": "Lagjja Kolovicë",
+    "stopsLimited": false
+  },
+  {
+    "id": "7A",
+    "from": "Vreshtat (Rr. Xhavit Ahmeti)",
+    "to": "Rrethi i Flamurit",
+    "officialFrom": "Vreshtat (Rr. Xhavit Ahmeti)",
+    "officialTo": "Rrethi i Flamurit",
+    "relation": 10247951,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Rr. Agim Ramadani - Prapa Komunës",
+    "mappedSegmentEnd": "Vreshtat - te \"Lesna\"",
+    "stopsLimited": false
+  },
+  {
+    "id": "7B",
+    "from": "Zona Industriale - Auto Kaçandolli",
+    "to": "Varrezat - fshati Makovc",
+    "officialFrom": "Zona Industriale - Auto Kaçandolli",
+    "officialTo": "Varrezat - fshati Makovc",
+    "relation": 19397163,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Rr. Agim Ramadani - Përballë Teatrit",
+    "mappedSegmentEnd": "Pompa \"Carbon Petrol\"",
+    "stopsLimited": false
+  },
+  {
+    "id": "7C",
+    "from": "Sh. M. L. Ekonomike",
+    "to": "Përballë Kopshitit \"Cicërimat\"",
+    "partial": true,
+    "relation": 11160278
+  },
+  {
+    "id": "8",
+    "from": "Arkivi i Shtetit, Lagjja e Spitalit",
+    "to": "Grashticë, Lagja Belecët",
+    "officialFrom": "Arkivi i Shtetit, Lagjja e Spitalit",
+    "officialTo": "Grashticë, Lagja Belecët",
+    "relation": 10227750,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Rr. Agim Ramadani - Përballë Teatrit",
+    "mappedSegmentEnd": "Makovc - tek Hamzovit",
+    "stopsLimited": false
+  },
+  {
+    "id": "10",
+    "from": "Hajvali",
+    "to": "Prishtine",
+    "officialFrom": "Hajvali",
+    "officialTo": "Prishtine",
+    "relation": 10248181,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Tek Spitali \"Olive\"",
+    "mappedSegmentEnd": "Rrethi i Spitalit",
+    "stopsLimited": false
+  },
+  {
+    "id": "10C",
+    "from": "Prishtina Mall",
+    "to": "Prishtinë (Qendër) and back towards Prishtina Mall",
+    "officialFrom": "Prishtina Mall",
+    "officialTo": "Prishtinë (Qendër) and back towards Prishtina Mall",
+    "relation": 18634744,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": "Valoni Petrol (Albi Mall)",
+    "mappedSegmentEnd": "Tek Spitali \"Olive\"",
+    "stopsLimited": false
   },
   {
     "id": "15",
@@ -67,5 +177,12 @@
     "to": "Xhamia",
     "partial": true,
     "relation": 11153452
+  },
+  {
+    "id": "19",
+    "from": "Hajvali (Hyrja)",
+    "to": "Trafo Kishnica (Kizhnica)",
+    "partial": true,
+    "relation": 18704771
   }
 ]
