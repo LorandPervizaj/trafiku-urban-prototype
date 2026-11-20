@@ -1,6 +1,7 @@
 import { state, persist, reset, applyTheme, esc } from "./state.js";
 import { storageAvailable } from "./storage.js";
 import { icon } from "./icons.js";
+import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
 import { findRoutes } from "./routes.js";
@@ -18,8 +19,24 @@ const $ = (s) => document.querySelector(s);
 let toastTimer;
 let sheetContext;
 let activeSelection = null;
+function applyLanguage() {
+  const language=state.prefs.language || "en";
+  document.documentElement.lang=language === "sq" ? "sq" : "en";
+  document.title="TRIP · Prishtina";
+  document.querySelectorAll("#lang-toggle [data-lang]").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.lang === language));
+  });
+  localize(document.body,language);
+}
+function setLanguage(language) {
+  if (!["en","sq"].includes(language)) return;
+  state.prefs.language=language;
+  savePrefs();
+  applyLanguage();
+}
 export function toast(text) {
   $("#toast").textContent = text;
+  localize($("#toast"),state.prefs.language);
   $("#toast").classList.add("visible");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
@@ -29,10 +46,12 @@ function savePrefs() {
     toast("Storage unavailable. Changes last for this visit only.");
 }
 function filters() {
-  const ids = state.lines.map((l) => l.id);
-  $("#filters").innerHTML =
-    `<button class="chip" data-filter="all" aria-pressed="${state.prefs.lines.length === ids.length}">All</button>${ids.map((id) => `<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("")}<button class="chip" data-filter="none" aria-pressed="${!state.prefs.lines.length}">None</button>`;
-  $("#stops-toggle").setAttribute("aria-pressed", state.prefs.showStops);
+  const ids=state.lines.map(l=>l.id);
+  const allOn=ids.length>0 && ids.every(id=>state.prefs.lines.includes(id));
+  $("#filters").innerHTML=`<button class="chip" data-filter="all" aria-pressed="${allOn}" aria-label="All">All</button>`+
+    ids.map(id=>`<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("");
+  $("#stops-toggle").setAttribute("aria-pressed",state.prefs.showStops);
+  localize($("#filters"),state.prefs.language);
 }
 function prepareJourney(stop, line, reverse = false) {
   // A stop at the segment endpoint boards the illustrative return direction.
@@ -46,64 +65,58 @@ function prepareJourney(stop, line, reverse = false) {
   ) || { ...line, reverse, direction: to };
 }
 function renderSheet(selection) {
-  if (selection?.type === "clear") { activeSelection = null; selection = null; }
-  else if (selection) activeSelection = selection;
-  else selection = activeSelection;
-  const sheet = $("#stop-sheet");
-  const screen = $("#map-screen");
+  if (selection?.type === "clear") { activeSelection = null; selection=null; }
+  else if (selection) activeSelection=selection;
+  else selection=activeSelection;
+  const sheet=$("#stop-sheet"), screen=$("#map-screen");
   if (!selection) {
-    sheetContext = null;
-    const active = state.lines.filter((line) => state.prefs.lines.includes(line.id));
-    $("#sheet-content").innerHTML = `<div class="map-intro-compact">
-      <div class="map-intro-copy"><strong>Find a bus</strong><small>Tap any bus or stop on the map</small></div>
-      <span class="map-intro-count">${active.length} lines</span>
-      <button class="map-intro-plan" data-action="plan" aria-label="Plan a journey">${icon("chevron")}</button>
-      </div>`;
-  } else {
-    let stop, line, heading, title;
-    if (selection.type === "stop") {
-      stop = selection.stop;
-      line = state.lines.find((l) => l.id === stop.properties.lines.find((id) => state.prefs.lines.includes(id))) ||
-        state.lines.find((l) => l.id === stop.properties.lines[0]);
-      heading = "STOP DEPARTURES";
-      title = stop.properties.name;
-    } else if (selection.type === "bus") {
-      line = state.lines.find((l) => l.id === selection.bus.line);
-      stop = state.stops.filter((s) => s.properties.lines.includes(line?.id)).reduce((best,s) => {
-        const p = selection.bus.position;
-        const d = (x) => (x.geometry.coordinates[0]-p[0])**2 + (x.geometry.coordinates[1]-p[1])**2;
-        return !best || d(s)<d(best) ? s : best;
-      },null);
-      heading = "BUS ON MAP";
-      title = `Line ${selection.bus.line}`;
-    }
-    if (!line) {
-      activeSelection = null;
-      renderSheet({type:"clear"});
-      return;
-    }
-    let reverse = selection.type === "bus" && selection.bus.direction === -1;
-    if (stop?.properties.name === line.from) reverse = false;
-    if (stop?.properties.name === line.to) reverse = true;
-    const direction = reverse ? line.from : line.to;
-    sheetContext = {line:line.id,origin:stop?.properties.name,reverse};
-    const d = departure(line.id,sheetContext);
-    $("#sheet-content").innerHTML = `<div class="row">
+    sheetContext=null;
+    sheet.hidden=true;
+    sheet.classList.remove("has-selection","collapsed");
+    screen.dataset.sheet="empty";
+    return;
+  }
+  let stop, line, heading, title;
+  if (selection.type==="stop") {
+    stop=selection.stop;
+    line=state.lines.find(l=>l.id===stop.properties.lines.find(id=>state.prefs.lines.includes(id)))||
+      state.lines.find(l=>l.id===stop.properties.lines[0]);
+    heading="STOP DEPARTURES";
+    title=stop.properties.name;
+  } else if(selection.type==="bus") {
+    line=state.lines.find(l=>l.id===selection.bus.line);
+    stop=state.stops.filter(s=>s.properties.lines.includes(line?.id)).reduce((best,s)=>{
+      const p=selection.bus.position;
+      const d=x=>(x.geometry.coordinates[0]-p[0])**2+(x.geometry.coordinates[1]-p[1])**2;
+      return !best || d(s)<d(best) ? s:best;
+    },null);
+    heading="BUS ON MAP";
+    title=`Line ${selection.bus.line}`;
+  }
+  if(!line){activeSelection=null;renderSheet({type:"clear"});return;}
+  let reverse=selection.type==="bus"&&selection.bus.direction===-1;
+  if(stop?.properties.name===line.from)reverse=false;
+  if(stop?.properties.name===line.to)reverse=true;
+  const direction=reverse?line.from:line.to;
+  sheetContext={line:line.id,origin:stop?.properties.name,reverse};
+  const d=departure(line.id,sheetContext);
+  $("#sheet-content").innerHTML=`<div class="row">
       <span class="eyebrow">${heading}</span>
       <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button>
-      </div><h2>${esc(title)}</h2>
-      <button class="departure-row" id="sheet-departure">
-        <span class="line-badge">${esc(line.id)}</span>
-        <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
-        <span class="time">${esc(d.time)}</span>
-      </button>`;
-    $("#sheet-departure").onclick = () => {prepareJourney(stop,line,reverse);navigate("details")};
-  }
-  sheet.classList.toggle("has-selection",Boolean(selection));
-  screen.dataset.sheet = selection ? "selected" : "overview";
+    </div><h2>${esc(title)}</h2>
+    <button class="departure-row" id="sheet-departure">
+      <span class="line-badge">${esc(line.id)}</span>
+      <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
+      <span class="time">${esc(d.time)}</span>
+    </button>`;
+  $("#sheet-departure").onclick=()=>{prepareJourney(stop,line,reverse);navigate("details");};
+  sheet.hidden=false;
+  sheet.classList.add("has-selection");
+  screen.dataset.sheet="selected";
   sheet.classList.remove("collapsed");
   $(".sheet-handle").setAttribute("aria-expanded","true");
   $(".sheet-handle").setAttribute("aria-label","Collapse map information");
+  applyLanguage();
 }
 async function render(view) {
   if (!screens) screens = await import("./ui/screens.js");
@@ -120,6 +133,7 @@ async function render(view) {
   if (view === "map") {
     showMap();
     renderSheet();
+    applyLanguage();
     return;
   }
   $("#page").innerHTML = screens[view]();
@@ -142,6 +156,7 @@ async function render(view) {
       document.activeElement?.blur();
       navigate("routes");
     });
+  applyLanguage();
 }
 function selectStop(id) {
   const s = state.stops.find((s) => s.properties.id === id);
@@ -153,19 +168,24 @@ function selectStop(id) {
 function openSettings() {
   $("#settings-dialog").innerHTML = screens.settings();
   $("#settings-dialog").showModal();
+  applyLanguage();
 }
 document.addEventListener("click", (e) => {
+  const language=e.target.closest("[data-lang]");
+  if(language){setLanguage(language.dataset.lang);return;}
   const filter = e.target.closest("[data-filter]");
   if (filter) {
     const id = filter.dataset.filter;
-    state.prefs.lines =
-      id === "all"
-        ? state.lines.map((l) => l.id)
-        : id === "none"
-          ? []
-          : state.prefs.lines.includes(id)
-            ? state.prefs.lines.filter((x) => x !== id)
-            : [...state.prefs.lines, id];
+    const available=state.lines.map(l=>l.id);
+    if(id==="all") {
+      const allOn=available.length>0 && available.every(x=>state.prefs.lines.includes(x));
+      state.prefs.lines=allOn ? [] : available;
+    } else {
+      state.prefs.lines=state.prefs.lines.includes(id)
+        ? state.prefs.lines.filter(x=>x!==id)
+        : [...state.prefs.lines,id];
+    }
+    state.prefs.allLines=available.length>0 && available.every(x=>state.prefs.lines.includes(x));
     savePrefs();
     filters();
     refreshLayers();
@@ -217,6 +237,7 @@ document.addEventListener("click", (e) => {
     navigate(a);
     return;
   }
+  if (a === "open-settings") { openSettings(); return; }
   if (a === "dismiss-sheet") { renderSheet({type:"clear"}); return; }
   if (a === "back") {
     navigate(state.view === "details" ? "routes" : "plan");
@@ -262,6 +283,7 @@ document.addEventListener("click", (e) => {
   if (a === "reset-preferences") {
     reset();
     state.prefs.lines = state.lines.map((line) => line.id);
+    state.prefs.allLines=true;
     savePrefs();
     applyTheme();
     filters();
@@ -273,6 +295,7 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("change", (e) => {
   const el = e.target;
+  if (el.id === "language") {setLanguage(el.value); return;}
   if (el.id === "theme") {
     state.prefs.theme = el.value;
     applyTheme();
@@ -353,14 +376,10 @@ async function start() {
     state.routes = routes.features;
     // First launch is a neutral map overview; nobody has a preselected journey.
     state.journey = { from: "", to: "" };
-    const availableIds = state.lines.map((line) => line.id);
-    const storedIds = state.prefs.lines || [];
-    // When a previous user had all original lines enabled, include any new data.
-    if (["4","3","1"].every((id) => storedIds.includes(id)) && storedIds.length === 3) {
-      state.prefs.lines = availableIds;
-    } else {
-      state.prefs.lines = storedIds.filter((id) => availableIds.includes(id));
-    }
+    const availableIds=state.lines.map(line=>line.id);
+    const storedIds=state.prefs.lines || [];
+    state.prefs.lines=state.prefs.allLines ? availableIds : storedIds.filter(id=>availableIds.includes(id));
+    state.prefs.allLines=state.prefs.lines.length===availableIds.length;
     filters();
     try {
       initMap((selection) => renderSheet(selection));
@@ -375,6 +394,7 @@ async function start() {
     if (!storageAvailable)
       toast("Local storage unavailable. Preferences last for this visit.");
   } catch (error) {
+    $("#stop-sheet").hidden=false;
     $("#sheet-content").innerHTML =
       "<h2>Route data could not load</h2><p>Serve this app over HTTP, then reload. Ticket information remains available.</p>";
     screens = await import("./ui/screens.js");

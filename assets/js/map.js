@@ -1,5 +1,6 @@
 import { state, persist, esc } from "./state.js";
 import { createSimulation } from "./simulation.js";
+import { translate } from "./i18n.js";
 let map, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
 let choose = () => {};
@@ -12,11 +13,11 @@ export function initMap(onChoose) {
     wheelPxPerZoomLevel: 95,
     inertia: true,
     inertiaDeceleration: 2250,
-    minZoom: 12,
+    minZoom: 11,
     maxZoom: 18,
     maxBounds: [
-      [42.52, 20.98],
-      [42.83, 21.35],
+      [42.36, 20.75],
+      [43.18, 21.70],
     ],
     maxBoundsViscosity: 0.8,
   });
@@ -70,7 +71,7 @@ export function initMap(onChoose) {
           iconSize: [28, 43],
           iconAnchor: [14, 22],
         }),
-        title: `Simulated bus ${b.id}`,
+        title: translate(`Simulated bus ${b.id}`, state.prefs.language),
         keyboard: true,
       });
       marker.on("click", () => {
@@ -89,8 +90,8 @@ export function initMap(onChoose) {
     if (b.position) marker.setLatLng([b.position[1], b.position[0]]);
     const el = marker.getElement();
     if (el) {
-      el.setAttribute("aria-label", `Simulated bus ${b.id}`);
-      el.title = `Line ${b.line} · ${b.movementState} · ${b.direction === 1 ? "outbound" : "return demonstration"}`;
+      el.setAttribute("aria-label", translate(`Simulated bus ${b.id}`, state.prefs.language));
+      el.title = translate(`Line ${b.line} · ${b.movementState} · ${b.direction === 1 ? "outbound" : "return demonstration"}`, state.prefs.language);
       el.style.setProperty("--heading", `${b.heading}deg`);
     }
   });

@@ -1,4 +1,4 @@
-# Trafiku Urban
+# TRIP — Prishtina transit prototype
 
 A mobile-first transit prototype for Prishtina, built for RIT Kosovo / ISTE 260, Group Project Part 3. By **Lorand Pervizaj and Donat Bojaj**.
 
@@ -93,3 +93,10 @@ map sheet, and preserves line-filter settings across reloads.
 
 The official line descriptions may differ from the historical OSM relations.
 Review ongoing roadworks and current timetables before relying on a journey.
+
+
+## TRIP bilingual UI and fares (November 2026)
+
+TRIP has persistent English/Albanian switching, including the plan, map, settings, tickets, status labels and accessibility text. The map initially has no bottom sheet until the user taps a bus or stop. The All route filter toggles between every mapped line and none.
+
+Official operator fare notice effective **1 July 2026**: https://trafikurban-pr.com/2022/njoftim-per-qytetaret-3/ . Single €0.60 digital / €0.80 physical; calendar-day €1.00 digital / €1.20 physical; airport 1A one-way €5 digital / €6 physical. The app still links to the official Kuleta Digjitale wallet rather than processing payment.

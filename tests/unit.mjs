@@ -5,6 +5,7 @@ import {
   interpolate,
   distance,
   createSimulation,
+  fleetCount,
 } from "../assets/js/simulation.js";
 const routes = JSON.parse(
   fs.readFileSync(new URL("../data/routes.geojson", import.meta.url)),
@@ -68,7 +69,7 @@ for (let i = 0; i < 6000; i++) {
   callback(now);
 }
 check(maxStep < 0.3, "No interpolation jumps at easing boundaries");
-check(simulation.buses.length === routes.length * 3, "Three buses per route");
+check(simulation.buses.length === routes.reduce((sum, route)=>sum+fleetCount(route.properties.line),0), "Configured fleet counts match route data");
 check(
   simulation.buses.every(
     (b) => b.progress >= 0 && b.progress <= b.route.total + 0.1,
@@ -105,6 +106,7 @@ check(
 tiny.reset();
 tiny.stop();
 check(!listeners.visibilitychange, "Visibility listener cleaned up");
+check(fleetCount("4") > fleetCount("19"), "Busy city route has more illustrative vehicles");
 console.log(
   `${checks} assertions passed; maximum bus movement per 60Hz frame: ${maxStep.toFixed(3)}m`,
 );

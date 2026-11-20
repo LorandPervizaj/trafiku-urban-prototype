@@ -1,4 +1,7 @@
 const R = 6371000;
+// Demonstration fleet sizes. These are not current municipal fleet counts.
+const FLEET = { "1":7, "1A":2, "3":8, "3B":2, "3C":6, "4":9, "7C":4, "15":2, "19":2 };
+export function fleetCount(line) { return FLEET[String(line)] || 3; }
 export function distance(a, b) {
   const rad = Math.PI / 180,
     dy = (b[1] - a[1]) * rad,
@@ -46,7 +49,7 @@ export function createSimulation(features, update) {
   let epoch = performance.now(),
     frame = 0;
   const buses = features.flatMap((f) =>
-    [0, 1, 2].map((n) => {
+    Array.from({ length: fleetCount(f.properties.line) }, (_, n) => {
       const route = prepare(f.geometry.coordinates);
       const stops = (
         f.properties.stopDistances || [
@@ -65,14 +68,15 @@ export function createSimulation(features, update) {
           duration: (end - stops[i]) / 8,
           dwell: 12,
         }));
+      const oneWay = legs.reduce((sum, leg) => sum + leg.duration + leg.dwell, 0);
       return {
         id: `${f.properties.line}-${n + 1}`,
         line: f.properties.line,
         route,
         legs,
         reversedLegs: [...legs].reverse(),
-        oneWay: legs.reduce((sum, leg) => sum + leg.duration + leg.dwell, 0),
-        offset: n * 230,
+        oneWay,
+        offset: n * (2 * oneWay / fleetCount(f.properties.line)),
         speed: 8,
         direction: 1,
         movementState: "moving",

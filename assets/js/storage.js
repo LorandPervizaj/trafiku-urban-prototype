@@ -1,6 +1,8 @@
 export const defaults = () => ({
   version: 1,
   theme: "system",
+  language: "en",
+  allLines: true,
   lines: ["4", "3", "1"],
   showStops: true,
   showRoutes: true,
@@ -18,6 +20,10 @@ export function read() {
     return {
       ...d,
       theme: ["light", "dark", "system"].includes(x.theme) ? x.theme : d.theme,
+      language: ["en","sq"].includes(x.language) ? x.language : "en",
+      allLines: typeof x.allLines === "boolean" ? x.allLines :
+        (Array.isArray(x.lines) && ([3,7].includes(x.lines.length)) &&
+         ["1","3","4"].every(id => x.lines.includes(id)) && x.lines.length !== 0),
       lines: Array.isArray(x.lines)
         ? x.lines.filter((v) => typeof v === "string" && /^[0-9]{1,2}[A-Z]?$/.test(v)).slice(0, 30)
         : d.lines,

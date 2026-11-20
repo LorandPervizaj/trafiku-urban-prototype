@@ -70,3 +70,9 @@ Committed additional segments:
 These are continuous *partial* pieces from community-mapped relations. They
 do not reflect known 2026 detours or confirmed full operating itineraries.
 All vehicle locations and departures remain simulated.
+
+## TRIP official-operator coverage expansion
+
+The November 2026 official route listing includes nine municipal operator lines: 1, 1A, 3, 3B, 3C, 4, 7C, 15 and 19. The expansion targets the two previously missing lines **1A** (airport, OSM relation 10118965) and **15** (Keçekollë / Prapashticë, relation 11153452). Only connected OSM geometry is drawn, even when the source is a partial historical route. A route is included only if mapped road geometry passes continuity and stop checks. Line 1A can show a mapped segment with one named stop because the source has fewer named stop nodes; this is not an assertion of complete boarding coverage. The campus/user journey is not treated as verifiable. All bus counts and movement remain simulated.
+
+Ticket prices are the operator's published 1 July 2026 fares: https://trafikurban-pr.com/2022/njoftim-per-qytetaret-3/ . The TRIP interface is an independent coursework prototype, not the official operator.

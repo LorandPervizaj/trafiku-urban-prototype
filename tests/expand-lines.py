@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 # Named on the operator's published route page as of November 2026.
 TARGETS = (
+    ("1A", 10118965),
+    ("15", 11153452),
     ("7C", 11160278),
     ("3B", 10187116),
     ("3C", 11160426),
@@ -183,7 +185,7 @@ def main():
                 continue
             selected.append((str(sid), name, position, idx))
         # Require at least two real named OSM stops so a route is useful.
-        if len(selected) < 2:
+        if len(selected) < (1 if line == "1A" else 2):
             print(f"Line {line}: insufficient named stops, skipped")
             continue
         selected.sort(key=lambda item: item[3])
@@ -193,7 +195,7 @@ def main():
         for a, b in zip(coords, coords[1:]):
             cumulative.append(cumulative[-1] + meters(a,b))
         distances = sorted(set([0.0, round(total, 1)] + [round(cumulative[s[3]],1) for s in selected]))
-        if len(distances) < 3:
+        if len(distances) < (2 if line == "1A" else 3):
             print(f"Line {line}: invalid stop spacing, skipped")
             continue
         routes_json["features"].append({
