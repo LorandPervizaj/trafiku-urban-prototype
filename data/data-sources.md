@@ -88,3 +88,7 @@ The fallback importer reads the officially documented OpenStreetMap API `relatio
 ## Opposite-direction route segments (November 20, 2026)
 
 TRIP separately imports the opposite-direction OpenStreetMap route relations where they have continuous road geometry and two mapped stops. The particularly important Line 4 relation is **10120492**, alongside the original 10120493. Candidate reverse relations: 1=10120832, 3=11153999, 3B=10187117, 3C=11160462, 1A=10118966, and 15=11153453. Each imported segment is marked `direction:return` and retains an OSM relation ID and the `partial:true` disclaimer. Stops are only associated with a line when projected onto the retained path within 110 meters. This expands visible station coverage without inventing connections. **These are historical OSM snapshots, not verified current street-by-street operating routes.** Simulation bus counts are grouped by line, not multiplied by direction features.
+
+## Extra mapped route pieces
+
+For primary central lines 1, 3, and 4, TRIP preserves additional disjoint street-way members of the same OSM route relations in `route-fragments.geojson`. Fragments are rendered as lighter context strokes and are **not used for vehicle movement or direct trip-planning geometry**. Missing road joins are never drawn. The snapshot is added incrementally during deployment and is loaded only after the core map is interactive. This helps reveal additional OSM-mapped route portions, especially Line 4, without claiming a continuous official full route.

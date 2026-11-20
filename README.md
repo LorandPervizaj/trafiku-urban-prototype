@@ -126,3 +126,8 @@ The English/Albanian toggle persists in localStorage, the **All** chip toggles b
 ## Directional map lines and stable colors
 
 Bus colors use the same token for every vehicle, filter chip, line badge and mapped street segment. Official Trafiku Urban E-Bus color convention: **Line 1 yellow, Line 3 green, Line 4 blue** (https://trafikurban-pr.com/2022/ebus/). Other line colors are TRIP-specific demo choices documented in `assets/js/line-colors.js`. A solid polyline represents the first mapped direction; where a second OSM relation is available, its partial direction is shown as a thinner dashed stroke of the same color. Vehicles are simulated with continuous elapsed-time interpolation, a capped refresh cadence, separate direction geometry where available, and precomputed shared paths. At clipped OSM segment endpoints, a smooth return demonstration is still used; this is not a verified real terminus. Do not treat map animation as GPS tracking.
+
+
+## Extended mapped route context
+
+Some OSM bus route relations contain disconnected road ways. TRIP preserves extra Line 1, 3 and 4 way fragments in `data/route-fragments.geojson`, with dotted semi-transparent route-colored strokes. Missing gaps are intentionally not joined, and simulated buses only move on validated continuous route segments. This optional layer loads during browser idle time after the map and buses are available, keeping first paint fast.

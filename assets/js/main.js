@@ -460,6 +460,20 @@ async function start() {
       $("#map-warning").textContent =
         "Map unavailable. Use Plan for local routes.";
     }
+    // Noncritical fragments load after the first map/buses are interactive.
+    const extraRoutes=()=>{
+      fetch("data/route-fragments.geojson")
+        .then(r=>r.ok?r.json():null)
+        .then(data=>{
+          if(data?.type==="FeatureCollection"&&Array.isArray(data.features)){
+            state.fragments=data.features;
+            refreshLayers();
+          }
+        }).catch(()=>{});
+    };
+    if("requestIdleCallback" in window)
+      window.requestIdleCallback(extraRoutes,{timeout:1800});
+    else setTimeout(extraRoutes,500);
     screens = await import("./ui/screens.js");
     $("#settings").onclick = openSettings;
     startRouter(render);

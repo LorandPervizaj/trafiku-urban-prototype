@@ -2,7 +2,7 @@ import { state, persist, esc } from "./state.js";
 import { createSimulation } from "./simulation.js";
 import { translate } from "./i18n.js";
 import { colorForLine, lineStyle } from "./line-colors.js";
-let map, routeLayer, stopLayer, busLayer, simulation, preview;
+let map, fragmentLayer, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
 let stopMarkersVisible = 0;
 let viewportBounds = null;
@@ -40,6 +40,7 @@ export function initMap(onChoose) {
     e.textContent =
       "Map tiles unavailable. Local bus routes and journey planning still work.";
   });
+  fragmentLayer = L.layerGroup().addTo(map);
   routeLayer = L.layerGroup().addTo(map);
   stopLayer = L.layerGroup().addTo(map);
   busLayer = L.layerGroup().addTo(map);
@@ -117,7 +118,21 @@ export function initMap(onChoose) {
 export function refreshLayers() {
   if (!map) return;
   routeLayer.clearLayers();
+  fragmentLayer.clearLayers();
   stopLayer.clearLayers();
+  if (state.prefs.showRoutes) {
+    for(const piece of state.fragments||[]){
+      if(!state.prefs.lines.includes(piece.properties.line))continue;
+      L.geoJSON(piece,{
+        style:{
+          color:colorForLine(piece.properties.line),
+          weight:state.prefs.lines.length===1?2.8:1.9,
+          opacity:state.prefs.lines.length===1?.62:.31,
+          dashArray:"3 6",
+        }
+      }).addTo(fragmentLayer);
+    }
+  }
   for (const f of state.routes)
     if (state.prefs.showRoutes && state.prefs.lines.includes(f.properties.line))
       L.geoJSON(f, {

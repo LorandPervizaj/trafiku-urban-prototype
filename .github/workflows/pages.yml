@@ -21,7 +21,7 @@ jobs:
       - name: Check JavaScript and Python syntax
         run: |
           for f in assets/js/*.js assets/js/ui/*.js tests/*.js tests/*.mjs; do node --check "$f"; done
-          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py
+          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py tests/enrich-directions.py tests/enrich-route-fragments.py
       - name: Validate deterministic simulation and dataset
         run: |
           node tests/unit.mjs
@@ -32,15 +32,17 @@ jobs:
         run: python3 tests/expand-lines.py
       - name: Enrich opposite-direction OSM segments
         run: python3 tests/enrich-directions.py
+      - name: Preserve disconnected route context
+        run: python3 tests/enrich-route-fragments.py
       - name: Enrich named OSM bus stops
         run: python3 tests/enrich-stops.py
       - name: Save verified OSM route snapshot
         shell: bash
         run: |
-          if ! git diff --quiet -- data/lines.json data/routes.geojson data/stops.geojson; then
+          if ! git diff --quiet -- data/lines.json data/routes.geojson data/stops.geojson data/route-fragments.geojson; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/lines.json data/routes.geojson data/stops.geojson
+            git add data/lines.json data/routes.geojson data/stops.geojson data/route-fragments.geojson
             git commit -m "data: save verified OSM route segments [skip ci]"
             git push origin HEAD:main || echo "Snapshot not pushed; deployed artifact will still include the routes."
           fi
