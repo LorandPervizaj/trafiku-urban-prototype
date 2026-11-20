@@ -44,6 +44,10 @@ export function initMap(onChoose) {
   routeLayer = L.layerGroup().addTo(map);
   stopLayer = L.layerGroup().addTo(map);
   busLayer = L.layerGroup().addTo(map);
+  // Disable marker CSS easing while Leaflet animates map zoom, so the
+  // map and vehicle icons stay visually locked together.
+  map.on("zoomstart",()=>map.getContainer().classList.add("map-zooming"));
+  map.on("zoomend",()=>map.getContainer().classList.remove("map-zooming"));
   map.on("click", () => choose({ type: "clear" }));
   map.on("moveend", () => {
     viewportBounds=map.getBounds().pad(.18);

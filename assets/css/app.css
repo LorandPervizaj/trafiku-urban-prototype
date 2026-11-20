@@ -1187,3 +1187,16 @@ html[data-reduced-motion="true"] .bus-vehicle { transition:none!important; }
   .leaflet-marker-icon.bus-marker:not(.leaflet-zoom-animated),
   .bus-vehicle,#filters .chip-all::before,#filters .chip-all::after{transition:none!important;}
 }
+
+/* Bridge 40Hz position samples with a short compositor-driven transition.
+   Zoom animations disable this so markers never trail behind their map. */
+#map:not(.map-zooming) .leaflet-marker-icon.bus-marker{
+  transition:transform 34ms linear;
+}
+#map.map-zooming .leaflet-marker-icon.bus-marker{
+  transition:none!important;
+}
+@media (prefers-reduced-motion:reduce){
+  #map .leaflet-marker-icon.bus-marker{transition:none!important;}
+}
+html[data-reduced-motion="true"] #map .leaflet-marker-icon.bus-marker{transition:none!important;}
