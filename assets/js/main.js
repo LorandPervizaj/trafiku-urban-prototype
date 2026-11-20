@@ -33,6 +33,17 @@ function filters() {
     `<button class="chip" data-filter="all" aria-pressed="${state.prefs.lines.length === ids.length}">All</button>${ids.map((id) => `<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("")}<button class="chip" data-filter="none" aria-pressed="${!state.prefs.lines.length}">None</button>`;
   $("#stops-toggle").setAttribute("aria-pressed", state.prefs.showStops);
 }
+function prepareJourney(stop, line, reverse = false) {
+  // A stop at the segment endpoint boards the illustrative return direction.
+  if (stop?.properties.name === line.to) reverse = true;
+  if (stop?.properties.name === line.from) reverse = false;
+  const from = stop?.properties.name || line.from;
+  const to = reverse ? line.from : line.to;
+  state.journey = { from, to };
+  state.selected = findRoutes(from, to).find(
+    (route) => route.id === line.id,
+  ) || { ...line, reverse, direction: to };
+}
 function renderSheet(selection) {
   let stop =
       state.stops.find((s) => s.properties.name === "Hotel Prishtina") ||
@@ -48,7 +59,15 @@ function renderSheet(selection) {
   }
   if (selection?.type === "bus") {
     line = state.lines.find((l) => l.id === selection.bus.line);
-    stop = state.stops.find((s) => s.properties.lines.includes(line.id));
+    stop = state.stops
+      .filter((s) => s.properties.lines.includes(line.id))
+      .reduce((best, s) => {
+        const p = selection.bus.position;
+        const squared = (x) =>
+          (x.geometry.coordinates[0] - p[0]) ** 2 +
+          (x.geometry.coordinates[1] - p[1]) ** 2;
+        return !best || squared(s) < squared(best) ? s : best;
+      }, null);
     heading = "SIMULATED VEHICLE";
     title = `Bus ${selection.bus.id}`;
   }
@@ -57,22 +76,20 @@ function renderSheet(selection) {
       "<h2>No route data</h2><p>Planning and ticket access remain available.</p>";
     return;
   }
+  let reverse = selection?.type === "bus" && selection.bus.direction === -1;
+  if (stop?.properties.name === line.from) reverse = false;
+  if (stop?.properties.name === line.to) reverse = true;
+  const direction = reverse ? line.from : line.to;
   sheetContext = {
     line: line.id,
     origin: stop?.properties.name,
-    reverse: false,
+    reverse,
   };
   const d = departure(line.id, sheetContext);
   $("#sheet-content").innerHTML =
-    `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">${state.prefs.lines.length ? state.prefs.lines.length + " lines visible" : "No lines selected"}</span></div><h2>${esc(title)}</h2><button class="departure-row" id="sheet-departure"><span class="line-badge">${line.id}</span><span><b>Line ${line.id} · ${esc(line.to)}</b><small>${d.label}</small></span><span class="time">${d.time}</span></button>`;
+    `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">${state.prefs.lines.length ? state.prefs.lines.length + " lines visible" : "No lines selected"}</span></div><h2>${esc(title)}</h2><button class="departure-row" id="sheet-departure"><span class="line-badge">${line.id}</span><span><b>Line ${line.id} · ${esc(direction)}</b><small>${d.label}</small></span><span class="time">${d.time}</span></button>`;
   $("#sheet-departure").onclick = () => {
-    state.journey = {
-      from: stop?.properties.name || "",
-      to:
-        state.stops.filter((s) => s.properties.lines.includes(line.id)).at(-1)
-          ?.properties.name || "",
-    };
-    state.selected = { ...line, direction: line.to };
+    prepareJourney(stop, line, reverse);
     navigate("details");
   };
   $("#stop-sheet").classList.remove("collapsed");
@@ -121,13 +138,7 @@ function selectStop(id) {
   const s = state.stops.find((s) => s.properties.id === id);
   if (!s) return;
   const line = state.lines.find((l) => l.id === s.properties.lines[0]);
-  state.journey = {
-    from: s.properties.name,
-    to:
-      state.stops.filter((x) => x.properties.lines.includes(line.id)).at(-1)
-        ?.properties.name || line.to,
-  };
-  state.selected = { ...line, direction: line.to };
+  prepareJourney(s, line);
   navigate("details");
 }
 function openSettings() {
