@@ -36,29 +36,6 @@ Standard viewport-only OpenStreetMap tiles, https://tile.openstreetmap.org/{z}/{
 
 Leaflet 1.9.4 is vendored from https://unpkg.com/leaflet@1.9.4/dist/ with upstream BSD-2-Clause license. Lato Regular and Bold are from https://github.com/google/fonts/tree/main/ofl/lato under SIL OFL; their license is included.
 
-## Additional map lines (deployed build)
-
-The deployed GitHub Pages build attempts to extend the committed three-line
-OSM dataset with relations **2, 7C, 6, and 3A**. Source relation IDs were
-already recorded in \`data/osm-relations.json\`:
-
-- Line 2: https://www.openstreetmap.org/relation/10121377
-- Line 7C: https://www.openstreetmap.org/relation/11160278
-- Line 6: https://www.openstreetmap.org/relation/10248144
-- Line 3A: https://www.openstreetmap.org/relation/10166778
-
-\`tests/expand-lines.py\` downloads OSM relation geometry using the Overpass
-API during deployment, retains only street-continuous portions that pass
-geometry checks, and adds named OSM stops when available. It never joins
-disconnected road fragments with invented links. Source is OSM contributors
-(ODbL 1.0). The data is an educational snapshot, **not live fleet tracking**,
-not a service timetable, and not confirmation of a current operating route.
-The displayed buses remain simulated. When the network service is unavailable,
-the build uses the three version-controlled routes instead of failing.
-
-The first map view is deliberately unselected; no particular route or stop
-is implied. Users choose a bus or stop to inspect its example departure.
-
 ## Additional official-line snapshot (November 2026)
 
 The enhanced route-loader prioritizes lines **7C, 3B, 3C, 1A, and 19**, which appear
@@ -73,3 +50,23 @@ snapshots for future deployments. Any unavailable or incomplete relation is
 skipped rather than fabricated. The exact service alignment, updated 2026
 diversions, direction-specific streets and GPS positions are not verified.
 All vehicles and ETAs remain simulated and educational.
+
+## Stable OSM snapshot created 2026-11-20
+
+The successful GitHub Pages build added **7C, 3B, 3C and 19** to the original
+lines **4, 3 and 1**. The additional street segments were fetched from the
+official OpenStreetMap API, validated for continuity and named stops, and
+saved in the repository. The attempted 1A extraction was rejected because
+its usable stops were insufficiently separated. No fabricated geometry was
+used. Subsequent deployments use this committed snapshot, without depending
+on Overpass or OSM availability.
+
+Committed additional segments:
+- 7C: 2.2 km, 4 named stops, OSM relation 11160278
+- 3B: 9.1 km, 17 named stops, OSM relation 10187116
+- 3C: 7.7 km, 20 named stops, OSM relation 11160426
+- 19: 5.6 km, 3 named stops, OSM relation 18704771
+
+These are continuous *partial* pieces from community-mapped relations. They
+do not reflect known 2026 detours or confirmed full operating itineraries.
+All vehicle locations and departures remain simulated.

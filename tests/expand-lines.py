@@ -20,7 +20,6 @@ TARGETS = (
     ("7C", 11160278),
     ("3B", 10187116),
     ("3C", 11160426),
-    ("1A", 10118965),
     ("19", 18704771),
 )
 USER_AGENT = "TrafikuUrbanEducationalPrototype/1.1 (route geometry, ODbL)"

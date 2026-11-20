@@ -13,7 +13,7 @@ No npm installation, build step, account, database, or server-side application i
 
 ## Features
 
-- Map-first Leaflet experience, nine simulated buses on three partial OSM route segments.
+- Map-first Leaflet experience, 21 simulated buses on seven partial OSM route segments.
 - Selectable buses and stops, route filters, stops/routes toggles, recentering, and collapsible nearby departure sheet.
 - Six connected views: Map, Plan, Route Options, Departure Details, Saved Journeys, Ticket.
 - Shared-stop journey suggestions; editable and reversible planning; helpful unmatched-destination state.
@@ -24,7 +24,7 @@ No npm installation, build step, account, database, or server-side application i
 
 ## Suggested demonstration
 
-Open Plan. Its default Hotel Prishtina to Europe House journey offers lines 4 and 3. Choose a route, review boarding guidance, save the journey, then reopen it from Plan. Open map settings for controlled departure states. The original Dardania-to-RIT example is not claimed as a verified connection; entering RIT Kosovo shows the no-match state.
+Open Map and inspect a bus or stop, or use Plan to enter two named stops that share a mapped line (for example Hotel Prishtina and Përballë Europe House). Choose a route, review boarding guidance, save the journey, then reopen it from Plan. Open map settings for controlled departure states. The original Dardania-to-RIT example is not claimed as a verified connection; entering RIT Kosovo shows the no-match state.
 
 ## Structure and modifications
 
@@ -81,3 +81,15 @@ Fares shown are Part 2 reference values, not a current fare claim. Official wall
   chips, and route cards. Colors must remain legible in light/dark themes and never
   communicate status without text. Keep the current monochrome markers until
   the mapping and visual contrast are checked.
+
+
+## November 20 map update
+
+The version-controlled dataset now includes seven OSM-based line segments:
+**1, 3, 3B, 3C, 4, 7C and 19**. Each segment uses mapped streets and named stops;
+some are incomplete and none is a substitute for current municipal route data.
+The app begins with an unselected map, uses compact bus markers and a reduced
+map sheet, and preserves line-filter settings across reloads.
+
+The official line descriptions may differ from the historical OSM relations.
+Review ongoing roadworks and current timetables before relying on a journey.
