@@ -25,5 +25,33 @@
     "officialTo": "Royal Mall",
     "partial": true,
     "relation": 10120831
+  },
+  {
+    "id": "7C",
+    "from": "Sh. M. L. Ekonomike",
+    "to": "Përballë Kopshitit \"Cicërimat\"",
+    "partial": true,
+    "relation": 11160278
+  },
+  {
+    "id": "3B",
+    "from": "Katedralja (N.kalim)",
+    "to": "Bërnice e Poshtme",
+    "partial": true,
+    "relation": 10187116
+  },
+  {
+    "id": "3C",
+    "from": "Sinidoll, Rr. \"Ibrahim Kelmendi\"",
+    "to": "Përballë Nura Grup",
+    "partial": true,
+    "relation": 11160426
+  },
+  {
+    "id": "19",
+    "from": "Hajvali (Hyrja)",
+    "to": "Trafo Kishnica (Kizhnica)",
+    "partial": true,
+    "relation": 18704771
   }
 ]
