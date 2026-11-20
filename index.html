@@ -34,23 +34,13 @@
     <main id="app">
       <section id="map-screen" aria-label="Prishtina bus map">
         <div id="map"></div>
-        <header class="map-header">
-          <div>
-            <span class="eyebrow">TRAFIKU URBAN</span>
-            <h1>Prishtina</h1>
-            <p>Find your next connection.</p>
-          </div>
-          <button
-            class="icon-button"
-            id="settings"
-            aria-label="Open map settings"
-          ></button>
-        </header>
         <div class="filter-panel">
-          <span class="eyebrow">SHOW LINES</span>
+          <div class="filter-top">
+            <span class="eyebrow">BUS LINES</span>
+            <button class="icon-button" id="settings" aria-label="Open map settings"></button>
+          </div>
           <div id="filters" role="group" aria-label="Visible bus lines"></div>
         </div>
-        <div class="demo-pill">Demo mode · Simulated buses</div>
         <div class="map-tools">
           <button
             class="icon-button"

@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate deterministic simulation and dataset
         run: node tests/unit.mjs
+      - name: Add additional verified OSM segments when available
+        run: python3 tests/expand-lines.py
       - name: Package static assets
         run: python3 tests/package-site.py
       - uses: actions/configure-pages@v5

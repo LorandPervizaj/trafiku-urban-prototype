@@ -4,7 +4,7 @@ export const state = {
   lines: [],
   stops: [],
   routes: [],
-  journey: { from: "Dardania", to: "National Library" },
+  journey: { from: "", to: "" },
   selected: null,
   departureMode: "mixed",
   view: "map",

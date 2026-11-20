@@ -45,56 +45,56 @@ function prepareJourney(stop, line, reverse = false) {
   ) || { ...line, reverse, direction: to };
 }
 function renderSheet(selection) {
-  let stop =
-      state.stops.find((s) => s.properties.name === "Hotel Prishtina") ||
-      state.stops[0],
-    line = state.lines[0],
-    heading = "NEARBY · CITY CENTRE",
-    title = stop?.properties.name || "Local routes";
-  if (selection?.type === "stop") {
-    stop = selection.stop;
-    line = state.lines.find((l) => l.id === stop.properties.lines[0]);
-    heading = "DEPARTURE BOARD";
-    title = stop.properties.name;
-  }
-  if (selection?.type === "bus") {
-    line = state.lines.find((l) => l.id === selection.bus.line);
-    stop = state.stops
-      .filter((s) => s.properties.lines.includes(line.id))
-      .reduce((best, s) => {
+  if (!selection) {
+    sheetContext = null;
+    const activeLines = state.lines.filter((line) => state.prefs.lines.includes(line.id));
+    const vehicles = (state.buses || []).filter((bus) => state.prefs.lines.includes(bus.line));
+    document.querySelector("#sheet-content").innerHTML =
+      `<div class="map-intro"><div class="row"><span class="eyebrow">AROUND PRISHTINA</span><span class="pill">${activeLines.length} lines</span></div>
+      <h2>Find your next bus</h2><p>Choose a bus or stop on the map, or plan a new journey.</p>
+      <div class="map-overview-stats"><span class="pill">${vehicles.length} buses on the map</span><span class="pill">Select a line to filter</span></div>
+      <button class="map-sheet-action" data-action="plan">Plan a journey <span aria-hidden="true">→</span></button></div>`;
+  } else {
+    let stop, line, heading, title;
+    if (selection.type === "stop") {
+      stop = selection.stop;
+      line = state.lines.find((l) => l.id === stop.properties.lines.find((id) => state.prefs.lines.includes(id))) ||
+        state.lines.find((l) => l.id === stop.properties.lines[0]);
+      heading = "STOP DEPARTURES";
+      title = stop.properties.name;
+    } else if (selection.type === "bus") {
+      line = state.lines.find((l) => l.id === selection.bus.line);
+      stop = state.stops.filter((s) => s.properties.lines.includes(line?.id)).reduce((best,s) => {
         const p = selection.bus.position;
-        const squared = (x) =>
-          (x.geometry.coordinates[0] - p[0]) ** 2 +
-          (x.geometry.coordinates[1] - p[1]) ** 2;
-        return !best || squared(s) < squared(best) ? s : best;
-      }, null);
-    heading = "SIMULATED VEHICLE";
-    title = `Bus ${selection.bus.id}`;
+        const squared = (x) => (x.geometry.coordinates[0]-p[0])**2+(x.geometry.coordinates[1]-p[1])**2;
+        return !best || squared(s)<squared(best) ? s : best;
+      },null);
+      heading = "BUS ON MAP";
+      title = `Line ${selection.bus.line}`;
+    }
+    if (!line) {
+      document.querySelector("#sheet-content").innerHTML = "<h2>Route unavailable</h2><p>Try another line or plan a journey.</p>";
+      return;
+    }
+    let reverse = selection.type === "bus" && selection.bus.direction === -1;
+    if (stop?.properties.name === line.from) reverse = false;
+    if (stop?.properties.name === line.to) reverse = true;
+    const direction = reverse ? line.from : line.to;
+    sheetContext = {line:line.id,origin:stop?.properties.name,reverse};
+    const d = departure(line.id,sheetContext);
+    document.querySelector("#sheet-content").innerHTML =
+      `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">Line ${esc(line.id)}</span></div>
+      <h2>${esc(title)}</h2>
+      <button class="departure-row" id="sheet-departure">
+        <span class="line-badge">${esc(line.id)}</span>
+        <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
+        <span class="time">${esc(d.time)}</span>
+      </button>`;
+    document.querySelector("#sheet-departure").onclick = () => {prepareJourney(stop,line,reverse);navigate("details")};
   }
-  if (!line) {
-    $("#sheet-content").innerHTML =
-      "<h2>No route data</h2><p>Planning and ticket access remain available.</p>";
-    return;
-  }
-  let reverse = selection?.type === "bus" && selection.bus.direction === -1;
-  if (stop?.properties.name === line.from) reverse = false;
-  if (stop?.properties.name === line.to) reverse = true;
-  const direction = reverse ? line.from : line.to;
-  sheetContext = {
-    line: line.id,
-    origin: stop?.properties.name,
-    reverse,
-  };
-  const d = departure(line.id, sheetContext);
-  $("#sheet-content").innerHTML =
-    `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">${state.prefs.lines.length ? state.prefs.lines.length + " lines visible" : "No lines selected"}</span></div><h2>${esc(title)}</h2><button class="departure-row" id="sheet-departure"><span class="line-badge">${line.id}</span><span><b>Line ${line.id} · ${esc(direction)}</b><small>${d.label}</small></span><span class="time">${d.time}</span></button>`;
-  $("#sheet-departure").onclick = () => {
-    prepareJourney(stop, line, reverse);
-    navigate("details");
-  };
-  $("#stop-sheet").classList.remove("collapsed");
-  $(".sheet-handle").setAttribute("aria-expanded", "true");
-  $(".sheet-handle").setAttribute("aria-label", "Collapse nearby departures");
+  document.querySelector("#stop-sheet").classList.remove("collapsed");
+  document.querySelector(".sheet-handle").setAttribute("aria-expanded","true");
+  document.querySelector(".sheet-handle").setAttribute("aria-label","Collapse nearby departures");
 }
 async function render(view) {
   if (!screens) screens = await import("./ui/screens.js");
@@ -328,18 +328,16 @@ async function start() {
     state.lines = lines;
     state.stops = stops.features;
     state.routes = routes.features;
-    state.journey = {
-      from:
-        state.stops.find((s) => s.properties.name === "Hotel Prishtina")
-          ?.properties.name ||
-        state.stops[0]?.properties.name ||
-        "",
-      to:
-        state.stops.find((s) => s.properties.name === "Përballë Europe House")
-          ?.properties.name ||
-        state.stops[1]?.properties.name ||
-        "",
-    };
+    // First launch is a neutral map overview; nobody has a preselected journey.
+    state.journey = { from: "", to: "" };
+    const availableIds = state.lines.map((line) => line.id);
+    const storedIds = state.prefs.lines || [];
+    // When a previous user had all original lines enabled, include any new data.
+    if (["4","3","1"].every((id) => storedIds.includes(id)) && storedIds.length === 3) {
+      state.prefs.lines = availableIds;
+    } else {
+      state.prefs.lines = storedIds.filter((id) => availableIds.includes(id));
+    }
     filters();
     try {
       initMap((selection) => renderSheet(selection));

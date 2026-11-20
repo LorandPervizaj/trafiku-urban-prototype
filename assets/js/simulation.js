@@ -70,6 +70,8 @@ export function createSimulation(features, update) {
         line: f.properties.line,
         route,
         legs,
+        reversedLegs: [...legs].reverse(),
+        oneWay: legs.reduce((sum, leg) => sum + leg.duration + leg.dwell, 0),
         offset: n * 230,
         speed: 8,
         direction: 1,
@@ -82,12 +84,12 @@ export function createSimulation(features, update) {
   function tick(now) {
     const elapsed = (now - epoch) / 1000;
     for (const b of buses) {
-      const oneWay = b.legs.reduce((s, l) => s + l.duration + l.dwell, 0);
+      const oneWay = b.oneWay;
       let t = (elapsed + b.offset) % (oneWay * 2);
       const reverse = t >= oneWay;
       b.direction = reverse ? -1 : 1;
       if (reverse) t -= oneWay;
-      const legs = reverse ? [...b.legs].reverse() : b.legs;
+      const legs = reverse ? b.reversedLegs : b.legs;
       let progress = 0;
       for (let i = 0; i < legs.length; i++) {
         const l = legs[i];
@@ -113,7 +115,12 @@ export function createSimulation(features, update) {
       b.progress = progress;
       const p = interpolate(b.route, progress);
       b.position = p.coordinate;
-      b.heading = p.heading + (reverse ? 180 : 0);
+      const heading = p.heading + (reverse ? 180 : 0);
+      if (b.heading === undefined) b.heading = heading;
+      else {
+        const turn = ((heading - b.heading + 540) % 360) - 180;
+        b.heading += Math.max(-9, Math.min(9, turn));
+      }
       update(b);
     }
     if (!document.hidden) frame = requestAnimationFrame(tick);

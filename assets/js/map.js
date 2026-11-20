@@ -1,5 +1,4 @@
 import { state, persist, esc } from "./state.js";
-import { icon } from "./icons.js";
 import { createSimulation } from "./simulation.js";
 let map, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
@@ -48,9 +47,23 @@ export function initMap(onChoose) {
       marker = L.marker([b.position[1], b.position[0]], {
         icon: L.divIcon({
           className: "bus-marker",
-          html: `<div class="bus-body">${icon("bus")}<b>${esc(b.line)}</b></div>`,
-          iconSize: [33, 38],
-          iconAnchor: [16, 19],
+          html: `<span class="bus-pin">
+            <svg class="bus-vehicle" viewBox="0 0 41 43" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect class="bus-wheel" x="1" y="9" width="5" height="10" rx="2"/>
+              <rect class="bus-wheel" x="35" y="9" width="5" height="10" rx="2"/>
+              <rect class="bus-wheel" x="1" y="27" width="5" height="9" rx="2"/>
+              <rect class="bus-wheel" x="35" y="27" width="5" height="9" rx="2"/>
+              <rect class="bus-body-shape" x="5" y="1" width="31" height="41" rx="8"/>
+              <rect class="bus-glass" x="9" y="5" width="23" height="10" rx="3"/>
+              <rect class="bus-glass" x="10" y="19" width="21" height="12" rx="3" opacity=".5"/>
+              <path d="M11 33H30" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+              <circle class="bus-light" cx="12" cy="4" r="1.5"/>
+              <circle class="bus-light" cx="29" cy="4" r="1.5"/>
+            </svg>
+            <span class="bus-line-tag">${esc(b.line)}</span>
+          </span>`,
+          iconSize: [46, 52],
+          iconAnchor: [23, 26],
         }),
         title: `Simulated bus ${b.id}`,
         keyboard: true,
@@ -65,7 +78,7 @@ export function initMap(onChoose) {
       markers.set(b.id, marker);
       if (state.prefs.lines.includes(b.line)) busLayer.addLayer(marker);
     }
-    marker.setLatLng([b.position[1], b.position[0]]);
+    if (b.position) marker.setLatLng([b.position[1], b.position[0]]);
     const el = marker.getElement();
     if (el) {
       el.setAttribute("aria-label", `Simulated bus ${b.id}`);
