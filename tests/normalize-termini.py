@@ -18,8 +18,15 @@ def main():
         rel=line.get("relation")
         tags=names.get(int(rel),{}) if rel is not None else {}
         if tags.get("ref")!=line["id"]:continue
-        official_from=(tags.get("from") or "").strip().rstrip(")")
-        official_to=(tags.get("to") or "").strip().rstrip(")")
+        def tidy(value):
+            value=(value or "").strip()
+            # Strip only an unmatched trailing parenthesis (some old OSM
+            # tags have it), retaining meaningful endpoint parentheses.
+            while value.endswith(")") and value.count(")")>value.count("("):
+                value=value[:-1].rstrip()
+            return value
+        official_from=tidy(tags.get("from"))
+        official_to=tidy(tags.get("to"))
         if not official_from or not official_to:continue
         if line.get("from")==official_from and line.get("to")==official_to:continue
         if "mappedSegmentStart" not in line:
