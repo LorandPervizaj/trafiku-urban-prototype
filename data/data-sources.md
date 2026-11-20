@@ -58,3 +58,18 @@ the build uses the three version-controlled routes instead of failing.
 
 The first map view is deliberately unselected; no particular route or stop
 is implied. Users choose a bus or stop to inspect its example departure.
+
+## Additional official-line snapshot (November 2026)
+
+The enhanced route-loader prioritizes lines **7C, 3B, 3C, 1A, and 19**, which appear
+on the official operator's timetable page: https://trafikurban-pr.com/2022/orari-dhe-linjat/.
+
+It uses route relation identifiers already recorded in `osm-relations.json`:
+7C=11160278, 3B=10187116, 3C=11160426, 1A=10118965, 19=18704771.
+The workflow attempts the public OSM GeoJSON endpoint, then the official OSM
+relation/full API. It only accepts long, continuous OSM street segments with
+at least two named stops, and stores accepted additions as version-controlled
+snapshots for future deployments. Any unavailable or incomplete relation is
+skipped rather than fabricated. The exact service alignment, updated 2026
+diversions, direction-specific streets and GPS positions are not verified.
+All vehicles and ETAs remain simulated and educational.

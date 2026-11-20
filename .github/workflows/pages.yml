@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -18,10 +18,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check JavaScript and Python syntax
+        run: |
+          for f in assets/js/*.js assets/js/ui/*.js tests/*.js tests/*.mjs; do node --check "$f"; done
+          python3 -m py_compile tests/expand-lines.py
       - name: Validate deterministic simulation and dataset
         run: node tests/unit.mjs
       - name: Add additional verified OSM segments when available
         run: python3 tests/expand-lines.py
+      - name: Save verified OSM route snapshot
+        shell: bash
+        run: |
+          if ! git diff --quiet -- data/lines.json data/routes.geojson data/stops.geojson; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/lines.json data/routes.geojson data/stops.geojson
+            git commit -m "data: save verified OSM route segments [skip ci]"
+            git push origin HEAD:main || echo "Snapshot not pushed; deployed artifact will still include the routes."
+          fi
       - name: Package static assets
         run: python3 tests/package-site.py
       - uses: actions/configure-pages@v5

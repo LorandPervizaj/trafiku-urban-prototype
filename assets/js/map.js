@@ -8,6 +8,10 @@ export function initMap(onChoose) {
   if (!window.L) throw new Error("The local map library could not load.");
   map = L.map("map", {
     zoomControl: false,
+    zoomSnap: 0.5,
+    wheelPxPerZoomLevel: 95,
+    inertia: true,
+    inertiaDeceleration: 2250,
     minZoom: 12,
     maxZoom: 18,
     maxBounds: [
@@ -35,6 +39,7 @@ export function initMap(onChoose) {
   routeLayer = L.layerGroup().addTo(map);
   stopLayer = L.layerGroup().addTo(map);
   busLayer = L.layerGroup().addTo(map);
+  map.on("click", () => choose({ type: "clear" }));
   map.on("moveend", () => {
     const c = map.getCenter();
     state.prefs.position = [c.lat, c.lng, map.getZoom()];
@@ -48,27 +53,30 @@ export function initMap(onChoose) {
         icon: L.divIcon({
           className: "bus-marker",
           html: `<span class="bus-pin">
-            <svg class="bus-vehicle" viewBox="0 0 41 43" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <rect class="bus-wheel" x="1" y="9" width="5" height="10" rx="2"/>
-              <rect class="bus-wheel" x="35" y="9" width="5" height="10" rx="2"/>
-              <rect class="bus-wheel" x="1" y="27" width="5" height="9" rx="2"/>
-              <rect class="bus-wheel" x="35" y="27" width="5" height="9" rx="2"/>
-              <rect class="bus-body-shape" x="5" y="1" width="31" height="41" rx="8"/>
-              <rect class="bus-glass" x="9" y="5" width="23" height="10" rx="3"/>
-              <rect class="bus-glass" x="10" y="19" width="21" height="12" rx="3" opacity=".5"/>
-              <path d="M11 33H30" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
-              <circle class="bus-light" cx="12" cy="4" r="1.5"/>
-              <circle class="bus-light" cx="29" cy="4" r="1.5"/>
+            <svg class="bus-vehicle" viewBox="0 0 26 43" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect class="bus-wheel" x="2" y="9" width="4" height="9" rx="1.6"/>
+              <rect class="bus-wheel" x="20" y="9" width="4" height="9" rx="1.6"/>
+              <rect class="bus-wheel" x="2" y="28" width="4" height="9" rx="1.6"/>
+              <rect class="bus-wheel" x="20" y="28" width="4" height="9" rx="1.6"/>
+              <rect class="bus-body-shape" x="5" y="1" width="16" height="40" rx="4.2"/>
+              <path class="bus-glass" d="M8 7q0-2 2-2h6q2 0 2 2v6H8z"/>
+              <path class="bus-glass" opacity=".75" d="M8 18h10v14H8z"/>
+              <path stroke="#e8ece9" stroke-width="1.7" d="M8 35h10"/>
+              <circle class="bus-light" cx="8.5" cy="3.5" r="1"/>
+              <circle class="bus-light" cx="17.5" cy="3.5" r="1"/>
             </svg>
             <span class="bus-line-tag">${esc(b.line)}</span>
           </span>`,
-          iconSize: [46, 52],
-          iconAnchor: [23, 26],
+          iconSize: [28, 43],
+          iconAnchor: [14, 22],
         }),
         title: `Simulated bus ${b.id}`,
         keyboard: true,
       });
       marker.on("click", () => {
+        if (!state.prefs.reducedMotion && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          map.panTo(marker.getLatLng(), { animate: true, duration: 0.32, easeLinearity: 0.28 });
+        }
         document
           .querySelectorAll(".bus-marker")
           .forEach((e) => e.classList.remove("selected"));
@@ -108,10 +116,15 @@ export function refreshLayers() {
       stop.properties.lines.some((l) => state.prefs.lines.includes(l))
     )
       L.marker([stop.geometry.coordinates[1], stop.geometry.coordinates[0]], {
-        icon: L.divIcon({ className: "stop-marker", iconSize: [12, 12] }),
+        icon: L.divIcon({ className: "stop-marker", iconSize: [30, 30], iconAnchor: [15, 15] }),
         title: stop.properties.name,
       })
-        .on("click", () => choose({ type: "stop", stop }))
+        .on("click", () => {
+          if (!state.prefs.reducedMotion && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            map.panTo([stop.geometry.coordinates[1], stop.geometry.coordinates[0]], {animate:true, duration:0.28});
+          }
+          choose({ type: "stop", stop });
+        })
         .addTo(stopLayer);
   for (const [id, m] of markers) {
     const line = id.split("-")[0];

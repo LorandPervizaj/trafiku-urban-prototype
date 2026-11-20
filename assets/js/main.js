@@ -17,6 +17,7 @@ let screens;
 const $ = (s) => document.querySelector(s);
 let toastTimer;
 let sheetContext;
+let activeSelection = null;
 export function toast(text) {
   $("#toast").textContent = text;
   $("#toast").classList.add("visible");
@@ -45,15 +46,19 @@ function prepareJourney(stop, line, reverse = false) {
   ) || { ...line, reverse, direction: to };
 }
 function renderSheet(selection) {
+  if (selection?.type === "clear") { activeSelection = null; selection = null; }
+  else if (selection) activeSelection = selection;
+  else selection = activeSelection;
+  const sheet = $("#stop-sheet");
+  const screen = $("#map-screen");
   if (!selection) {
     sheetContext = null;
-    const activeLines = state.lines.filter((line) => state.prefs.lines.includes(line.id));
-    const vehicles = (state.buses || []).filter((bus) => state.prefs.lines.includes(bus.line));
-    document.querySelector("#sheet-content").innerHTML =
-      `<div class="map-intro"><div class="row"><span class="eyebrow">AROUND PRISHTINA</span><span class="pill">${activeLines.length} lines</span></div>
-      <h2>Find your next bus</h2><p>Choose a bus or stop on the map, or plan a new journey.</p>
-      <div class="map-overview-stats"><span class="pill">${vehicles.length} buses on the map</span><span class="pill">Select a line to filter</span></div>
-      <button class="map-sheet-action" data-action="plan">Plan a journey <span aria-hidden="true">→</span></button></div>`;
+    const active = state.lines.filter((line) => state.prefs.lines.includes(line.id));
+    $("#sheet-content").innerHTML = `<div class="map-intro-compact">
+      <div class="map-intro-copy"><strong>Find a bus</strong><small>Tap any bus or stop on the map</small></div>
+      <span class="map-intro-count">${active.length} lines</span>
+      <button class="map-intro-plan" data-action="plan" aria-label="Plan a journey">${icon("chevron")}</button>
+      </div>`;
   } else {
     let stop, line, heading, title;
     if (selection.type === "stop") {
@@ -66,14 +71,15 @@ function renderSheet(selection) {
       line = state.lines.find((l) => l.id === selection.bus.line);
       stop = state.stops.filter((s) => s.properties.lines.includes(line?.id)).reduce((best,s) => {
         const p = selection.bus.position;
-        const squared = (x) => (x.geometry.coordinates[0]-p[0])**2+(x.geometry.coordinates[1]-p[1])**2;
-        return !best || squared(s)<squared(best) ? s : best;
+        const d = (x) => (x.geometry.coordinates[0]-p[0])**2 + (x.geometry.coordinates[1]-p[1])**2;
+        return !best || d(s)<d(best) ? s : best;
       },null);
       heading = "BUS ON MAP";
       title = `Line ${selection.bus.line}`;
     }
     if (!line) {
-      document.querySelector("#sheet-content").innerHTML = "<h2>Route unavailable</h2><p>Try another line or plan a journey.</p>";
+      activeSelection = null;
+      renderSheet({type:"clear"});
       return;
     }
     let reverse = selection.type === "bus" && selection.bus.direction === -1;
@@ -82,19 +88,22 @@ function renderSheet(selection) {
     const direction = reverse ? line.from : line.to;
     sheetContext = {line:line.id,origin:stop?.properties.name,reverse};
     const d = departure(line.id,sheetContext);
-    document.querySelector("#sheet-content").innerHTML =
-      `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">Line ${esc(line.id)}</span></div>
-      <h2>${esc(title)}</h2>
+    $("#sheet-content").innerHTML = `<div class="row">
+      <span class="eyebrow">${heading}</span>
+      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button>
+      </div><h2>${esc(title)}</h2>
       <button class="departure-row" id="sheet-departure">
         <span class="line-badge">${esc(line.id)}</span>
         <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
         <span class="time">${esc(d.time)}</span>
       </button>`;
-    document.querySelector("#sheet-departure").onclick = () => {prepareJourney(stop,line,reverse);navigate("details")};
+    $("#sheet-departure").onclick = () => {prepareJourney(stop,line,reverse);navigate("details")};
   }
-  document.querySelector("#stop-sheet").classList.remove("collapsed");
-  document.querySelector(".sheet-handle").setAttribute("aria-expanded","true");
-  document.querySelector(".sheet-handle").setAttribute("aria-label","Collapse nearby departures");
+  sheet.classList.toggle("has-selection",Boolean(selection));
+  screen.dataset.sheet = selection ? "selected" : "overview";
+  sheet.classList.remove("collapsed");
+  $(".sheet-handle").setAttribute("aria-expanded","true");
+  $(".sheet-handle").setAttribute("aria-label","Collapse map information");
 }
 async function render(view) {
   if (!screens) screens = await import("./ui/screens.js");
@@ -160,6 +169,7 @@ document.addEventListener("click", (e) => {
     savePrefs();
     filters();
     refreshLayers();
+    if (activeSelection?.type === "bus" && !state.prefs.lines.includes(activeSelection.bus.line)) activeSelection = null;
     renderSheet();
     return;
   }
@@ -207,6 +217,7 @@ document.addEventListener("click", (e) => {
     navigate(a);
     return;
   }
+  if (a === "dismiss-sheet") { renderSheet({type:"clear"}); return; }
   if (a === "back") {
     navigate(state.view === "details" ? "routes" : "plan");
   }
@@ -250,6 +261,8 @@ document.addEventListener("click", (e) => {
   }
   if (a === "reset-preferences") {
     reset();
+    state.prefs.lines = state.lines.map((line) => line.id);
+    savePrefs();
     applyTheme();
     filters();
     refreshLayers();
@@ -297,25 +310,35 @@ $("#stops-toggle").onclick = () => {
   filters();
   refreshLayers();
 };
-let touchY = 0;
-$(".sheet-handle").addEventListener("pointerdown", (e) => (touchY = e.clientY));
-$(".sheet-handle").addEventListener("pointerup", (e) => {
-  if (Math.abs(e.clientY - touchY) > 20) {
-    $("#stop-sheet").classList.toggle("collapsed", e.clientY > touchY);
-    $(".sheet-handle").setAttribute(
-      "aria-expanded",
-      !$("#stop-sheet").classList.contains("collapsed"),
-    );
-  }
+// One consistent handle interaction for tap, swipe up/down and touch.
+const sheetHandle = $(".sheet-handle");
+let dragStart = null, dragMoved = false, skipClick = false;
+function applySheetCollapsed(collapsed) {
+  const sheet = $("#stop-sheet");
+  sheet.classList.toggle("collapsed", collapsed);
+  $("#map-screen").dataset.sheet = collapsed ? "collapsed" : (activeSelection ? "selected" : "overview");
+  sheetHandle.setAttribute("aria-expanded", String(!collapsed));
+  sheetHandle.setAttribute("aria-label", collapsed ? "Expand map information" : "Collapse map information");
+}
+sheetHandle.addEventListener("pointerdown", (event) => {
+  dragStart = event.clientY;
+  dragMoved = false;
 });
-$(".sheet-handle").onclick = () => {
-  const expanded = $("#stop-sheet").classList.toggle("collapsed");
-  $(".sheet-handle").setAttribute("aria-expanded", String(!expanded));
-  $(".sheet-handle").setAttribute(
-    "aria-label",
-    expanded ? "Expand nearby departures" : "Collapse nearby departures",
-  );
-};
+sheetHandle.addEventListener("pointerup", (event) => {
+  if (dragStart === null) return;
+  const dy = event.clientY - dragStart;
+  if (Math.abs(dy) > 25) {
+    applySheetCollapsed(dy > 0);
+    dragMoved = true;
+    skipClick = true;
+  }
+  dragStart = null;
+});
+sheetHandle.addEventListener("pointercancel", () => { dragStart = null; });
+sheetHandle.addEventListener("click", () => {
+  if (skipClick) { skipClick = false; return; }
+  applySheetCollapsed(!$("#stop-sheet").classList.contains("collapsed"));
+});
 async function start() {
   try {
     const [lines, stops, routes] = await Promise.all(

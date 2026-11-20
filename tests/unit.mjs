@@ -68,7 +68,7 @@ for (let i = 0; i < 6000; i++) {
   callback(now);
 }
 check(maxStep < 0.3, "No interpolation jumps at easing boundaries");
-check(simulation.buses.length === 9, "Three buses per route");
+check(simulation.buses.length === routes.length * 3, "Three buses per route");
 check(
   simulation.buses.every(
     (b) => b.progress >= 0 && b.progress <= b.route.total + 0.1,

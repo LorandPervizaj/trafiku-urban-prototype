@@ -72,3 +72,12 @@ Offline: after loading, local planning/saved/ticket screens continue working. Co
 Map data copyright OpenStreetMap contributors, ODbL 1.0: https://www.openstreetmap.org/copyright. Map tiles: https://tile.openstreetmap.org, normal browser caching only; no bulk downloads. Leaflet 1.9.4 BSD-2-Clause and Lato SIL Open Font License are bundled with license files. The muted basemap remains neutral in both themes. Third-party tile requests disclose viewport/network information to the provider; no analytics are installed.
 
 Fares shown are Part 2 reference values, not a current fare claim. Official wallet URL was checked during implementation. No credentials are stored in this project.
+
+
+## Next visual refinement (planned, not yet implemented)
+
+- **Route-specific color coding:** give each validated bus line a distinct, accessible
+  route color and apply it consistently to bus markers, route polylines, legend/filter
+  chips, and route cards. Colors must remain legible in light/dark themes and never
+  communicate status without text. Keep the current monochrome markers until
+  the mapping and visual contrast are checked.

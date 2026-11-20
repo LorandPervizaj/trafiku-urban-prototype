@@ -1016,3 +1016,59 @@ html[data-reduced-motion="true"] *::before {
   .bus-vehicle { transition: none; }
 }
 html[data-reduced-motion="true"] .bus-vehicle { transition: none; }
+
+
+/* Part 3 refinement: compact discovery card, tactile markers, quiet desktop branding. */
+.desktop-brand { max-width: 330px; left: max(30px, calc(50% - 555px)); top: calc(50% - 180px); color: #292d2c; }
+.wordmark { display: inline-flex; align-items: center; gap: 14px; line-height: 1; text-decoration: none; color: #292d2c; letter-spacing: -1.8px; }
+.brand-route-mark { width: 58px; height: 58px; flex: none; }
+.wordmark-text { font-size: 49px; font-weight: 900; letter-spacing: -2px; color: #292d2c; }
+.wordmark-dot { color: #292d2c; }
+.desktop-brand .desktop-tagline { font-size: 25px; font-weight: 700; line-height: 1.22; letter-spacing: -.7px; color: #292d2c; margin: 40px 0 48px; }
+.desktop-brand small { font-size: 11px; letter-spacing: .7px; line-height: 1.8; color: #545d57; }
+.map-intro-compact { display:flex; align-items:center; gap: 12px; min-height: 50px; }
+.map-intro-copy { min-width:0; flex:1; }
+.map-intro-copy strong { display:block; font-size:16px; line-height:1.1; }
+.map-intro-copy small { display:block; margin-top:4px; font-size:12px; color:var(--muted); }
+.map-intro-count { background: var(--fog); border:1px solid var(--line); border-radius:20px; padding:6px 9px; font-size:12px; font-weight:700; white-space:nowrap; }
+.map-intro-plan { height:38px; width:38px; background:var(--ink); color:var(--paper); border-radius:12px; display:grid;place-items:center; flex:none; }
+.map-intro-plan .icon { width:19px;height:19px; }
+.stop-sheet { bottom: 9px; left:10px; right:10px; padding: 0 14px 9px; border-radius: 21px; transition: transform .3s cubic-bezier(.21,.9,.27,1); max-height: min(53dvh, 360px); }
+.sheet-handle { height: 18px; touch-action:none; cursor:grab; }
+.sheet-handle span { width: 32px; height: 4px; }
+.sheet-handle:active { cursor:grabbing; }
+.stop-sheet.collapsed { transform: translateY(calc(100% - 19px)); }
+.stop-sheet.has-selection { padding-bottom: 14px; }
+.stop-sheet.has-selection h2 { font-size:20px; margin:6px 0 12px; }
+.sheet-close { color:var(--muted); background:var(--fog); font-size:13px; border-radius:30px; width:32px; height:32px; display:grid; place-items:center; }
+.map-tools { bottom: 104px; transition: bottom .25s cubic-bezier(.21,.9,.27,1); }
+#map-screen[data-sheet="selected"] .map-tools { bottom: 205px; }
+#map-screen[data-sheet="collapsed"] .map-tools { bottom: 49px; }
+.map-warning { top: 126px; }
+#filters { scroll-behavior:smooth; }
+.leaflet-marker-icon.stop-marker { width:30px!important; height:30px!important; background:transparent; border:none; box-shadow:none; }
+.leaflet-marker-icon.stop-marker:after { content:""; position:absolute; top:9px; left:9px; width:11px; height:11px; background:var(--paper); border:2.5px solid #17624d; border-radius:50%; box-shadow:0 0 0 2px #fff9; transition: transform .18s ease, box-shadow .18s ease; }
+.leaflet-marker-icon.stop-marker:hover:after, .leaflet-marker-icon.stop-marker.active:after { transform:scale(1.27); box-shadow:0 0 0 4px #17624d24; }
+.bus-pin { width: 28px; height: 43px; display: grid; place-items:start center; position:relative; }
+.bus-vehicle { width:24px; height:35px; transform-origin:50% 50%; filter: drop-shadow(0 1px 2px #0006); transform:rotate(var(--heading, 0deg)); transition:transform .105s linear; }
+.bus-line-tag { position:absolute; left:50%; bottom:0; transform:translateX(-50%); font-size:9px; line-height:13px; min-width:17px; border:1px solid #fff; padding:0 3px; border-radius:7px; color:#fff; background:#292d2c; text-align:center; font-weight:900; }
+.bus-marker.selected .bus-line-tag { background:#17624d; }
+.bus-marker.selected .bus-vehicle { filter:drop-shadow(0 1px 4px #17624d88); }
+@media (max-height:720px) {
+  .stop-sheet { padding-bottom:8px; bottom:7px; }
+  .map-tools { bottom:95px; }
+  #map-screen[data-sheet="selected"] .map-tools { bottom:185px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .stop-sheet, .map-tools, .bus-vehicle, #filters { transition:none!important; scroll-behavior:auto; }
+}
+html[data-reduced-motion="true"] .stop-sheet,
+html[data-reduced-motion="true"] .map-tools,
+html[data-reduced-motion="true"] .bus-vehicle { transition:none!important; }
+
+/* Clean lowercase wordmark takes priority over the old secondary caption. */
+.desktop-brand .wordmark > .wordmark-text {
+  display: inline; margin: 0; padding: 0;
+  font-size: 49px; font-weight: 900; letter-spacing: -2px;
+  color: #292d2c; line-height: 1;
+}

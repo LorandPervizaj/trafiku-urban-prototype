@@ -19,7 +19,7 @@ export function read() {
       ...d,
       theme: ["light", "dark", "system"].includes(x.theme) ? x.theme : d.theme,
       lines: Array.isArray(x.lines)
-        ? x.lines.filter((v) => d.lines.includes(v))
+        ? x.lines.filter((v) => typeof v === "string" && /^[0-9]{1,2}[A-Z]?$/.test(v)).slice(0, 30)
         : d.lines,
       showStops: typeof x.showStops === "boolean" ? x.showStops : true,
       showRoutes: typeof x.showRoutes === "boolean" ? x.showRoutes : true,
