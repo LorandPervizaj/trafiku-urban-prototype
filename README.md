@@ -13,7 +13,7 @@ No npm installation, build step, account, database, or server-side application i
 
 ## Features
 
-- Map-first Leaflet experience, 21 simulated buses on seven partial OSM route segments.
+- Map-first Leaflet experience, 42 simulated buses on nine partial OSM route segments.
 - Selectable buses and stops, route filters, stops/routes toggles, recentering, and collapsible nearby departure sheet.
 - Six connected views: Map, Plan, Route Options, Departure Details, Saved Journeys, Ticket.
 - Shared-stop journey suggestions; editable and reversible planning; helpful unmatched-destination state.
@@ -100,3 +100,10 @@ Review ongoing roadworks and current timetables before relying on a journey.
 TRIP has persistent English/Albanian switching, including the plan, map, settings, tickets, status labels and accessibility text. The map initially has no bottom sheet until the user taps a bus or stop. The All route filter toggles between every mapped line and none.
 
 Official operator fare notice effective **1 July 2026**: https://trafikurban-pr.com/2022/njoftim-per-qytetaret-3/ . Single €0.60 digital / €0.80 physical; calendar-day €1.00 digital / €1.20 physical; airport 1A one-way €5 digital / €6 physical. The app still links to the official Kuleta Digjitale wallet rather than processing payment.
+
+
+## Coverage as of November 20, 2026
+
+The current local map dataset includes **all nine lines listed on Trafiku Urban's published operator schedule**: 1, 1A, 3, 3B, 3C, 4, 7C, 15 and 19. The newly mapped partial segments are 1A (7.2 km / two named stops) and 15 (21.7 km / 20 named stops). Mapped routes may omit portions of an official itinerary. The 42 vehicle markers are **simulated demo vehicles**, not a real fleet count or location feed.
+
+The English/Albanian toggle persists in localStorage, the **All** chip toggles between every line and none, and the map launches without a bottom card until a vehicle or stop is selected. Ticket prices are verified from the operator's July 2026 announcement.

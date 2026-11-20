@@ -189,7 +189,9 @@ document.addEventListener("click", (e) => {
     savePrefs();
     filters();
     refreshLayers();
-    if (activeSelection?.type === "bus" && !state.prefs.lines.includes(activeSelection.bus.line)) activeSelection = null;
+    if (!state.prefs.lines.length) activeSelection=null;
+    else if (activeSelection?.type === "bus" && !state.prefs.lines.includes(activeSelection.bus.line)) activeSelection=null;
+    else if (activeSelection?.type === "stop" && !activeSelection.stop.properties.lines.some(line=>state.prefs.lines.includes(line))) activeSelection=null;
     renderSheet();
     return;
   }
