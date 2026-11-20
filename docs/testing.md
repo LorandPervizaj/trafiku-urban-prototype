@@ -28,4 +28,8 @@ No real usability sessions were conducted. Participant materials and report/obse
 
 ## Live deployment
 
-GitHub Pages publication and postdeployment verification will be recorded here after the deployment run completes.
+Published to https://lorandpervizaj.github.io/trafiku-urban-prototype/ and verified on 2026-11-20. GitHub Actions run https://github.com/LorandPervizaj/trafiku-urban-prototype/actions/runs/44716746818 completed successfully for application commit 2277ee6.
+
+Live Chromium verification returned HTTP 200 and confirmed nine bus markers, route planning, saved-journey persistence after reload, terminal-stop return direction, and an actual new-tab wallet handoff to https://kd.pbc.group/index. No uncaught JavaScript errors occurred. `tests/live-check.js` contains the repeatable scenario. `tests/endpoint-check.js` verifies terminal-stop planning locally. Live smoke testing modifies only this test browser's app-local saved trips; it does not buy a ticket.
+
+The endpoint regression was tested after a full page reload so the browser loaded the updated JavaScript module; navigating only the hash in an existing SPA tab retains the old module until reload.

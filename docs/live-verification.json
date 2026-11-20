@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-20",
+  "url": "https://lorandpervizaj.github.io/trafiku-urban-prototype/",
+  "applicationCommit": "2277ee6",
+  "pagesRun": 44716746818,
+  "httpStatus": 200,
+  "simulatedBuses": 9,
+  "planning": true,
+  "savedJourneyPersistence": true,
+  "terminalReturnDirection": true,
+  "walletHandoff": "https://kd.pbc.group/index",
+  "uncaughtErrors": []
+}
