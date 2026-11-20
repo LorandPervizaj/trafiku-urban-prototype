@@ -80,3 +80,7 @@ Ticket prices are the operator's published 1 July 2026 fares: https://trafikurba
 ## Additional stop coverage
 
 TRIP now imports named OSM bus-stop nodes and bus platforms within Greater Prishtina at build time, independently of route relations. These additional stops are marked `unassigned: true` with `lines: []`: they are **physical OSM stops without verified line associations**. They remain searchable and visible on the map, but the app must not invent departures or assert that a particular bus serves them. The import is optional and retains the last committed snapshot if the Overpass service fails. Source: https://overpass.private.coffee/api/interpreter ; copyright OpenStreetMap contributors (ODbL 1.0).
+
+### November 2026 stop importer revision
+
+The fallback importer reads the officially documented OpenStreetMap API `relation/<id>/full` for lines 2, 3A, 6, 6A, 7, 7A, 7B, 8, 10 and 10C and extracts named node stop/platform relation members. It is an educational route-based location snapshot, not a complete inventory of public transit platforms. These locations are added as unassigned until a mapped/verified route serves them. The loader never guesses a line association. Source OSM community contributors, ODbL.
