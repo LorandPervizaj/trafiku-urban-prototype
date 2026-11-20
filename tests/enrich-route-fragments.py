@@ -17,7 +17,7 @@ DATA=ROOT/"data"
 OUTPUT=DATA/"route-fragments.geojson"
 SOURCE=DATA/"routes.geojson"
 # Focus on central high-use routes first. Existing snapshots carry relation ids.
-FOCUS={"4","3","1"}
+FOCUS={"4","3","1","6","6A","7","7A","7B","8","10","10C"}
 HEADERS={"User-Agent":"TRIP-educational-prototype/1.2 (OSM ODbL)"}
 
 

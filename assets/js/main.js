@@ -2,6 +2,7 @@ import { state, persist, reset, applyTheme, esc } from "./state.js";
 import { storageAvailable } from "./storage.js";
 import { icon } from "./icons.js";
 import { lineStyle } from "./line-colors.js";
+import { stopArrivalBoard, arrivalLabel } from "./stop-arrivals.js";
 import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
@@ -21,6 +22,7 @@ const $ = (s) => document.querySelector(s);
 let toastTimer;
 let sheetContext;
 let activeSelection = null;
+let stopRefreshTimer = null;
 function applyLanguage() {
   const language=state.prefs.language || "en";
   document.documentElement.lang=language === "sq" ? "sq" : "en";
@@ -82,81 +84,120 @@ function prepareJourney(stop, line, reverse = false) {
     (route) => route.id === line.id,
   ) || { ...line, reverse, direction: to };
 }
+function clearStopRefresh(){
+  if(stopRefreshTimer!==null)clearInterval(stopRefreshTimer);
+  stopRefreshTimer=null;
+}
+
+function stationRows(stop){
+  const rows=stopArrivalBoard(stop,state.lines,state.buses||[]);
+  if(!rows.length)
+    return '<p class="unassigned-note">No mapped bus lines assigned to this stop yet.</p>';
+  return rows.map(({line,arrivals,hasGeometry})=>{
+    const entry=state.lines.find(l=>l.id===line);
+    const onMap=state.prefs.lines.includes(line);
+    const times=arrivals.length
+      ? '<div class="eta-times">'+arrivals.map(a=>
+          '<span class="eta-chip">'+esc(arrivalLabel(a.seconds))+'</span>'
+        ).join("")+'</div>'
+      : '<small class="eta-unavailable">'+
+          (hasGeometry?'No demo arrival in next 20 min':'ETA not available')+
+        '</small>';
+    return '<div class="station-service '+(onMap?'station-served-selected':'')+'">'+
+      '<span class="line-badge" style="'+lineStyle(line)+'">'+esc(line)+'</span>'+
+      '<div class="station-service-details"><b>Line '+esc(line)+'</b>'+
+        '<small>'+esc(entry?.to||"Mapped route")+'</small></div>'+
+      times+'</div>';
+  }).join("");
+}
+
 function renderSheet(selection) {
-  if (selection?.type === "clear") { activeSelection = null; selection=null; }
-  else if (selection) activeSelection=selection;
+  clearStopRefresh();
+  if (selection?.type==="clear"){activeSelection=null;selection=null;}
+  else if(selection)activeSelection=selection;
   else selection=activeSelection;
-  const sheet=$("#stop-sheet"), screen=$("#map-screen");
-  if (!selection) {
+  const sheet=$("#stop-sheet"),screen=$("#map-screen");
+  sheet.classList.remove("station-sheet");
+  if(!selection){
     sheetContext=null;
     sheet.hidden=true;
     sheet.classList.remove("has-selection","collapsed");
     screen.dataset.sheet="empty";
     return;
   }
-  let stop, line, heading, title;
-  if (selection.type==="stop") {
-    stop=selection.stop;
-    line=state.lines.find(l=>l.id===stop.properties.lines.find(id=>state.prefs.lines.includes(id)))||
-      state.lines.find(l=>l.id===stop.properties.lines[0]);
-    heading="STOP DEPARTURES";
-    title=stop.properties.name;
-  } else if(selection.type==="bus") {
+  const stop=selection.type==="stop"?selection.stop:null;
+  if(stop){
+    // A white stop still describes all of its mapped services. Filter
+    // selection changes its map color, not what the OSM relation says.
+    sheetContext=null;
+    $("#sheet-content").innerHTML=
+      '<div class="row"><span class="eyebrow">STOP · SIMULATED ARRIVALS</span>'+
+      '<button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>'+
+      '<h2>'+esc(stop.properties.name)+'</h2>'+
+      '<p class="station-subtitle">Bus lines at this stop · next 20 minutes</p>'+
+      '<div id="station-service-list" class="station-service-list">'+stationRows(stop)+'</div>'+
+      '<p class="station-note">Demo estimates only. Not live GPS or an official timetable.</p>';
+    sheet.classList.add("station-sheet","has-selection");
+    sheet.classList.remove("collapsed");
+    sheet.hidden=false;
+    screen.dataset.sheet="stop";
+    $(".sheet-handle").setAttribute("aria-expanded","true");
+    $(".sheet-handle").setAttribute("aria-label","Collapse map information");
+    applyLanguage();
+    // Update the displayed times without rebuilding the rest of the sheet.
+    // Do not run the update when the app or document is hidden.
+    stopRefreshTimer=setInterval(()=>{
+      if(state.view!=="map" || document.hidden ||
+        activeSelection?.type!=="stop" ||
+        activeSelection.stop.properties.id!==stop.properties.id)return;
+      const element=$("#station-service-list");
+      if(!element)return;
+      element.innerHTML=stationRows(stop);
+      localize(element,state.prefs.language);
+    },10000);
+    return;
+  }
+  let line,nearest,heading,title;
+  if(selection.type==="bus"){
     line=state.lines.find(l=>l.id===selection.bus.line);
-    stop=state.stops.filter(s=>s.properties.lines.includes(line?.id)).reduce((best,s)=>{
+    nearest=state.stops.filter(s=>s.properties.lines.includes(line?.id)).reduce((best,s)=>{
       const p=selection.bus.position;
-      const d=x=>(x.geometry.coordinates[0]-p[0])**2+(x.geometry.coordinates[1]-p[1])**2;
-      return !best || d(s)<d(best) ? s:best;
+      const d=x=>(x.geometry.coordinates[0]-p[0])**2+
+        (x.geometry.coordinates[1]-p[1])**2;
+      return !best||d(s)<d(best)?s:best;
     },null);
     heading="BUS ON MAP";
-    title=`Line ${selection.bus.line}`;
-  }
-  if(!line && selection.type==="stop") {
-    sheetContext=null;
-    $("#sheet-content").innerHTML=`<div class="row"><span class="eyebrow">MAPPED BUS STOP</span>
-      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>
-      <h2>${esc(stop.properties.name)}</h2>
-      <p class="unassigned-note">This stop is mapped in OpenStreetMap, but its bus lines are not verified.</p>
-      <button class="button secondary" data-action="plan">Search a journey</button>`;
-    sheet.hidden=false;
-    sheet.classList.add("has-selection");
-    screen.dataset.sheet="selected";
-    sheet.classList.remove("collapsed");
-    $(".sheet-handle").setAttribute("aria-expanded","true");
-    applyLanguage();
-    return;
+    title="Line "+selection.bus.line;
   }
   if(!line){activeSelection=null;renderSheet({type:"clear"});return;}
-  if(line.roadOnly) {
+  if(line.roadOnly){
     sheetContext=null;
-    $("#sheet-content").innerHTML=`<div class="row"><span class="eyebrow">MAPPED ROUTE</span>
-      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>
-      <h2>Line ${esc(line.id)}</h2>
-      <p class="unassigned-note">${esc(line.from)} → ${esc(line.to)}</p>
-      <p class="unassigned-note">Route geometry is available, but no verified boarding stops or departures are mapped yet.</p>`;
-    sheet.hidden=false;
-    sheet.classList.add("has-selection");
-    sheet.classList.remove("collapsed");
-    screen.dataset.sheet="selected";
-    applyLanguage();
-    return;
+    $("#sheet-content").innerHTML=
+      '<div class="row"><span class="eyebrow">MAPPED ROUTE</span>'+
+      '<button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>'+
+      '<h2>Line '+esc(line.id)+'</h2>'+
+      '<p class="unassigned-note">'+esc(line.from)+' → '+esc(line.to)+'</p>'+
+      '<p class="unassigned-note">Route geometry is available, but no verified boarding stops or departures are mapped yet.</p>';
+  }else{
+    let reverse=selection.bus.direction===-1;
+    if(nearest?.properties.name===line.from)reverse=false;
+    if(nearest?.properties.name===line.to)reverse=true;
+    const direction=reverse?line.from:line.to;
+    sheetContext={line:line.id,origin:nearest?.properties.name,reverse};
+    const d=departure(line.id,sheetContext);
+    $("#sheet-content").innerHTML=
+      '<div class="row"><span class="eyebrow">'+heading+'</span>'+
+      '<button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>'+
+      '<h2>'+esc(title)+'</h2>'+
+      '<button class="departure-row" id="sheet-departure">'+
+        '<span class="line-badge" style="'+lineStyle(line.id)+'">'+esc(line.id)+'</span>'+
+        '<span><b>Towards '+esc(direction)+'</b><small>'+esc(d.label)+'</small></span>'+
+        '<span class="time">'+esc(d.time)+'</span></button>';
+    $("#sheet-departure").onclick=()=>{
+      prepareJourney(nearest,line,reverse);
+      navigate("details");
+    };
   }
-  let reverse=selection.type==="bus"&&selection.bus.direction===-1;
-  if(stop?.properties.name===line.from)reverse=false;
-  if(stop?.properties.name===line.to)reverse=true;
-  const direction=reverse?line.from:line.to;
-  sheetContext={line:line.id,origin:stop?.properties.name,reverse};
-  const d=departure(line.id,sheetContext);
-  $("#sheet-content").innerHTML=`<div class="row">
-      <span class="eyebrow">${heading}</span>
-      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button>
-    </div><h2>${esc(title)}</h2>
-    <button class="departure-row" id="sheet-departure">
-      <span class="line-badge" style="${lineStyle(line.id)}">${esc(line.id)}</span>
-      <span><b>Towards ${esc(direction)}</b><small>${esc(d.label)}</small></span>
-      <span class="time">${esc(d.time)}</span>
-    </button>`;
-  $("#sheet-departure").onclick=()=>{prepareJourney(stop,line,reverse);navigate("details");};
   sheet.hidden=false;
   sheet.classList.add("has-selection");
   screen.dataset.sheet="selected";
@@ -168,6 +209,7 @@ function renderSheet(selection) {
 async function render(view) {
   if (!screens) screens = await import("./ui/screens.js");
   clearPreview();
+  if(view!=="map")clearStopRefresh();
   state.view = view;
   $("#map-screen").hidden = view !== "map";
   $("#page").hidden = view === "map";

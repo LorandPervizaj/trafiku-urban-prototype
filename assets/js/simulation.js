@@ -90,6 +90,8 @@ export function createSimulation(features,update){
     for(const b of buses){
       const track=b.track;
       let t=(elapsed+b.offset)%(track.oneWay*2);
+      // Current cycle position is used by the stop-specific demo ETA board.
+      b.cycleSeconds=t;
       const backward=t>=track.oneWay;
       if(backward)t-=track.oneWay;
       const legs=backward?track.backwards:track.legs;

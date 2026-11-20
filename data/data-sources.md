@@ -118,3 +118,27 @@ as moving buses just because their IDs appear in a municipal contract.
 ### Route endpoint labels versus mapped segment boundaries
 
 The initial map used endpoints of the largest continuous OSM *fragment* as line terminals. `normalize-termini.py` now preserves these only as `mappedSegmentStart`/`mappedSegmentEnd` and uses the actual recorded OSM relation `from` and `to` tags as the line's displayed advertised destinations. These labels remain historical community mapping, not verified current street deviations. Line 2's source route may have no named stop members near its contiguous mapped roads; only if this remains true do we show a **road-only** segment without inventing boarding stops, and suppress any live estimate for that incomplete route.
+
+## Stop-specific map styling and ETA board (2026-11-20)
+
+Route filtering changes *only the visual focus*: stops served by any selected
+mapped line are filled black; other stops remain white. Map-stop line
+associations remain the OSM route-relation relationships published in the
+version-controlled snapshot. The stop panel shows all those known lines with
+matching route colors, even if some are currently hidden from the map filter.
+
+Arrival estimates are produced from TRIP's deterministic simulated bus
+progress and stops projected onto their actual continuous mapped road
+segments (maximum perpendicular separation 125 m). Each estimate is the
+next time a simulated bus crosses that point, including the demonstration
+stop dwell phases. The panel shows up to three bus times per route within the
+next 20 minutes. A stop without a usable route projection shows
+"ETA not available", rather than a fabricated prediction. All displayed
+arrival times are **DEMO ONLY**; no operator real-time API or published
+service timetable is connected.
+
+For more complete *visual* road alignment, the build also extracts additional
+community-mapped OSM way fragments for Lines 6, 6A, 7, 7A, 7B, 8, 10,
+and 10C, extending existing Line 1/3/4 route context. These are individually
+mapped streets and are not joined with invented connector paths. Buses remain
+on the validated continuous main route segments, not the disconnected pieces.

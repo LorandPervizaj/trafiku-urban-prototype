@@ -130,8 +130,8 @@ export function refreshLayers() {
       L.geoJSON(piece,{
         style:{
           color:colorForLine(piece.properties.line),
-          weight:state.prefs.lines.length===1?2.8:1.9,
-          opacity:state.prefs.lines.length===1?.62:.31,
+          weight:state.prefs.lines.length===1?3.4:2.1,
+          opacity:state.prefs.lines.length===1?.76:.36,
           // All services have continuous solid styling; missing data remains
           // disconnected rather than implying an alternative service type.
           dashArray:null,
@@ -157,27 +157,45 @@ export function refreshLayers() {
   }
 }
 function refreshStopMarkers(){
-  if(!map || !stopLayer)return;
+  if(!map || !stopLayer) return;
   stopLayer.clearLayers();
   stopMarkersVisible=0;
-  if(!state.prefs.showStops)return;
+  if(!state.prefs.showStops) return;
   const zoom=map.getZoom();
-  if(zoom<12.7)return;
+  if(zoom<12.3) return;
+  const selected = new Set(state.prefs.lines);
   const bounds=map.getBounds().pad(.23);
-  const visible=state.stops.filter(stop=>
-    bounds.contains([stop.geometry.coordinates[1],stop.geometry.coordinates[0]]) &&
-    (zoom>=13.7 || stop.properties.lines.length)
-  ).slice(0,180);
+  const visible=state.stops.filter(stop=>{
+    const active=stop.properties.lines.some(id=>selected.has(id));
+    const pos=[stop.geometry.coordinates[1],stop.geometry.coordinates[0]];
+    // Reveal all stations when zoomed in; otherwise prioritize those
+    // served by the selected bus lines to limit marker overlap.
+    return bounds.contains(pos) && (zoom>=13.2 || active);
+  }).sort((a,b)=>{
+    const aa=a.properties.lines.some(id=>selected.has(id));
+    const bb=b.properties.lines.some(id=>selected.has(id));
+    return Number(bb)-Number(aa);
+  }).slice(0,190);
   for(const stop of visible){
-    const unassigned=!stop.properties.lines.length;
-    L.marker([stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{
-      icon:L.divIcon({className:unassigned?"stop-marker stop-marker-unassigned":"stop-marker",
-        iconSize:[30,30],iconAnchor:[15,15]}),
-      title:stop.properties.name,
-      keyboard:true
-    }).on("click",()=>{
+    const served=stop.properties.lines.some(id=>selected.has(id));
+    const names=stop.properties.lines.length
+      ? " · lines " + stop.properties.lines.join(", ")
+      : " · line assignment unavailable";
+    const marker=L.marker(
+      [stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{
+        icon:L.divIcon({
+          className:"stop-marker "+(served?"stop-marker-served":"stop-marker-unselected"),
+          iconSize:[30,30],iconAnchor:[15,15]
+        }),
+        title:stop.properties.name+names,
+        keyboard:true,
+        zIndexOffset:served?240:20
+      }
+    );
+    marker.on("click",()=>{
       if(!state.prefs.reducedMotion && !matchMedia("(prefers-reduced-motion: reduce)").matches)
-        map.panTo([stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{animate:true,duration:.28});
+        map.panTo([stop.geometry.coordinates[1],stop.geometry.coordinates[0]],
+          {animate:true,duration:.28});
       choose({type:"stop",stop});
     }).addTo(stopLayer);
     stopMarkersVisible++;

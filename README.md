@@ -152,3 +152,14 @@ color-matched. The map filters scroll horizontally to reveal all mapped lines.
 ## Displayed route termini
 
 TRIP uses the from/to destination tags recorded on each original OSM bus-route relation, rather than labeling the clipped end of a road segment as the last station. The clipped segment names are preserved separately, and the route remains explicitly partial. If Line 2 only has verifiable road geometry and no named stop members, its buses are a map-only visual simulation; the app does not invent departures or stops for it.
+
+## Selected station indicators and simulated stop departures
+
+With Line 4 selected, its OSM-associated stops are black and unrelated mapped
+stops are white. This also works with several lines selected: any stop served by
+one of the selected lines turns black. Clicking a station shows its mapped
+services with the same color/number as each bus line, and up to three
+simulation-based arrivals within the next 20 minutes for each service.
+The panel refreshes roughly every ten seconds. A missing mapped route or a
+station too far from an existing continuous road segment displays no ETA.
+Everything is a demonstration, never live tracking or a real timetable.
