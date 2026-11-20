@@ -1,28 +1,53 @@
 [
   {
     "id": "1",
-    "from": "Dardani \"Ibër-Lepenci\"",
-    "to": "Rrethi \"Maxi 24h\" (Rr.B)",
+    "from": "St. Hekurudhor",
+    "to": "Royal Mall",
     "officialFrom": "St. Hekurudhor",
     "officialTo": "Royal Mall",
     "partial": true,
-    "relation": 10120831
+    "relation": 10120831,
+    "mappedSegmentStart": "Dardani \"Ibër-Lepenci\"",
+    "mappedSegmentEnd": "Rrethi \"Maxi 24h\" (Rr.B)",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "1A",
-    "from": "Rrethi Fushë Kosovë",
-    "to": "Sllatinë (mbi rrethrrotullim)",
+    "from": "Stacioni i Autobusëve në Prishtinë",
+    "to": "Aeroporti Ndërkombëtar i Prishtinës",
     "partial": true,
-    "relation": 10118965
+    "relation": 10118965,
+    "mappedSegmentStart": "Rrethi Fushë Kosovë",
+    "mappedSegmentEnd": "Sllatinë (mbi rrethrrotullim)",
+    "officialFrom": "Stacioni i Autobusëve në Prishtinë",
+    "officialTo": "Aeroporti Ndërkombëtar i Prishtinës",
+    "terminiSource": "osm-relation-tags"
+  },
+  {
+    "id": "2",
+    "from": "Obiliq",
+    "to": "Fakulteti Teknik",
+    "officialFrom": "Obiliq",
+    "officialTo": "Fakulteti Teknik",
+    "relation": 10121377,
+    "partial": true,
+    "operatorType": "contracted-private",
+    "mappedSegmentStart": null,
+    "mappedSegmentEnd": null,
+    "stopsLimited": true,
+    "roadOnly": true
   },
   {
     "id": "3",
-    "from": "Bardhosh, tek Kroi",
-    "to": "Pejton përballë ish - Ramiz Sadikut",
+    "from": "Rrethi i Matit",
+    "to": "Bardhosh, tek Kroi",
     "officialFrom": "Rrethi i Matit",
     "officialTo": "Bardhosh, tek Kroi",
     "partial": true,
-    "relation": 11153998
+    "relation": 11153998,
+    "mappedSegmentStart": "Bardhosh, tek Kroi",
+    "mappedSegmentEnd": "Pejton përballë ish - Ramiz Sadikut",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "3A",
@@ -39,26 +64,39 @@
   },
   {
     "id": "3B",
-    "from": "Katedralja (N.kalim)",
-    "to": "Bërnice e Poshtme",
+    "from": "Bërnicë e Ulët",
+    "to": "Mat (Rrethi i Matit",
     "partial": true,
-    "relation": 10187116
+    "relation": 10187116,
+    "mappedSegmentStart": "Katedralja (N.kalim)",
+    "mappedSegmentEnd": "Bërnice e Poshtme",
+    "officialFrom": "Bërnicë e Ulët",
+    "officialTo": "Mat (Rrethi i Matit",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "3C",
-    "from": "Sinidoll, Rr. \"Ibrahim Kelmendi\"",
-    "to": "Përballë Nura Grup",
+    "from": "Sinidoll, Rr. \"I. Kelmendi\"",
+    "to": "Rrethi i Matit",
     "partial": true,
-    "relation": 11160426
+    "relation": 11160426,
+    "mappedSegmentStart": "Sinidoll, Rr. \"Ibrahim Kelmendi\"",
+    "mappedSegmentEnd": "Përballë Nura Grup",
+    "officialFrom": "Sinidoll, Rr. \"I. Kelmendi\"",
+    "officialTo": "Rrethi i Matit",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "4",
-    "from": "Parku i Gërmise",
-    "to": "Pejton përballë ish - Ramiz Sadikut",
+    "from": "Xhamia në Mat",
+    "to": "Parku i Gërmisë",
     "officialFrom": "Xhamia në Mat",
     "officialTo": "Parku i Gërmisë",
     "partial": true,
-    "relation": 10120493
+    "relation": 10120493,
+    "mappedSegmentStart": "Parku i Gërmise",
+    "mappedSegmentEnd": "Pejton përballë ish - Ramiz Sadikut",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "6",
@@ -101,16 +139,17 @@
   },
   {
     "id": "7A",
-    "from": "Vreshtat (Rr. Xhavit Ahmeti)",
+    "from": "Vreshtat (Rr. Xhavit Ahmeti",
     "to": "Rrethi i Flamurit",
-    "officialFrom": "Vreshtat (Rr. Xhavit Ahmeti)",
+    "officialFrom": "Vreshtat (Rr. Xhavit Ahmeti",
     "officialTo": "Rrethi i Flamurit",
     "relation": 10247951,
     "partial": true,
     "operatorType": "contracted-private",
     "mappedSegmentStart": "Rr. Agim Ramadani - Prapa Komunës",
     "mappedSegmentEnd": "Vreshtat - te \"Lesna\"",
-    "stopsLimited": false
+    "stopsLimited": false,
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "7B",
@@ -127,10 +166,15 @@
   },
   {
     "id": "7C",
-    "from": "Sh. M. L. Ekonomike",
-    "to": "Përballë Kopshitit \"Cicërimat\"",
+    "from": "Kalabri (Emshir",
+    "to": "Qender - back to Kalabri (Emshir",
     "partial": true,
-    "relation": 11160278
+    "relation": 11160278,
+    "mappedSegmentStart": "Sh. M. L. Ekonomike",
+    "mappedSegmentEnd": "Përballë Kopshitit \"Cicërimat\"",
+    "officialFrom": "Kalabri (Emshir",
+    "officialTo": "Qender - back to Kalabri (Emshir",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "8",
@@ -173,16 +217,26 @@
   },
   {
     "id": "15",
-    "from": "Xhamia e Llapit (Tophane)",
-    "to": "Xhamia",
+    "from": "Policia Keçekollë",
+    "to": "Xhamia e Llapit",
     "partial": true,
-    "relation": 11153452
+    "relation": 11153452,
+    "mappedSegmentStart": "Xhamia e Llapit (Tophane)",
+    "mappedSegmentEnd": "Xhamia",
+    "officialFrom": "Policia Keçekollë",
+    "officialTo": "Xhamia e Llapit",
+    "terminiSource": "osm-relation-tags"
   },
   {
     "id": "19",
-    "from": "Hajvali (Hyrja)",
-    "to": "Trafo Kishnica (Kizhnica)",
+    "from": "Rrethi i Flamurit",
+    "to": "Kishnicë, tek Rr. Ibrahim Rugova",
     "partial": true,
-    "relation": 18704771
+    "relation": 18704771,
+    "mappedSegmentStart": "Hajvali (Hyrja)",
+    "mappedSegmentEnd": "Trafo Kishnica (Kizhnica)",
+    "officialFrom": "Rrethi i Flamurit",
+    "officialTo": "Kishnicë, tek Rr. Ibrahim Rugova",
+    "terminiSource": "osm-relation-tags"
   }
 ]
