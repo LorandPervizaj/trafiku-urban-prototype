@@ -44,8 +44,8 @@ const main=fs.readFileSync(new URL("../assets/js/main.js",import.meta.url),"utf8
 const css=fs.readFileSync(new URL("../assets/css/app.css",import.meta.url),"utf8");
 assert(map.includes("stop-marker-served")&&map.includes("stop-marker-unselected"),
   "Black/white station marker classes are implemented");
-assert(map.includes("stop.properties.lines.some(id=>selected.has(id))"),
-  "Marker depends on current selected line(s)");
+assert(map.includes("stopSelectedForLines(stop,selected)"),
+  "Marker uses explicit stop lines plus nearby mapped roads");
 assert(css.includes(".stop-marker-served::after")&&css.includes(".stop-marker-unselected::after"),
   "Station fill styles present");
 assert(main.includes("Demo estimates only. Not live GPS or an official timetable."),

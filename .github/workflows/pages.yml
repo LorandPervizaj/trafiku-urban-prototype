@@ -47,6 +47,7 @@ jobs:
           node tests/colors.mjs
           node tests/network.mjs
           node tests/stop-arrivals.mjs
+          node tests/stop-coverage.mjs
       - name: Save verified OSM route snapshot
         shell: bash
         run: |

@@ -3,6 +3,7 @@ import { storageAvailable } from "./storage.js";
 import { icon } from "./icons.js";
 import { lineStyle } from "./line-colors.js";
 import { stopArrivalBoard, arrivalLabel } from "./stop-arrivals.js";
+import { routeNearbyLines } from "./stop-coverage.js";
 import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
@@ -91,9 +92,13 @@ function clearStopRefresh(){
 
 function stationRows(stop){
   const rows=stopArrivalBoard(stop,state.lines,state.buses||[]);
-  if(!rows.length)
-    return '<p class="unassigned-note">No mapped bus lines assigned to this stop yet.</p>';
-  return rows.map(({line,arrivals,hasGeometry})=>{
+  // Nearness to a mapped street is not verified boarding service. Show a
+  // separate, clearly labeled line rather than inventing any ETA for it.
+  const valid=new Set(state.lines.map(l=>l.id));
+  const near=routeNearbyLines(stop)
+    .filter(id=>valid.has(id)&&state.prefs.lines.includes(id))
+    .slice(0,6);
+  const assigned=rows.map(({line,arrivals,hasGeometry})=>{
     const entry=state.lines.find(l=>l.id===line);
     const onMap=state.prefs.lines.includes(line);
     const times=arrivals.length
@@ -109,6 +114,15 @@ function stationRows(stop){
         '<small>'+esc(entry?.to||"Mapped route")+'</small></div>'+
       times+'</div>';
   }).join("");
+  const proximity=near.map(line=>
+    '<div class="station-service station-nearby">'+
+      '<span class="line-badge" style="'+lineStyle(line)+'">'+esc(line)+'</span>'+
+      '<div class="station-service-details"><b>Line '+esc(line)+'</b>'+
+      '<small>Route passes nearby · stop not verified</small></div>'+
+      '<small class="eta-unavailable">No verified ETA</small></div>'
+  ).join("");
+  return assigned+proximity ||
+    '<p class="unassigned-note">No mapped bus lines assigned to this stop yet.</p>';
 }
 
 function renderSheet(selection) {
@@ -134,7 +148,7 @@ function renderSheet(selection) {
       '<div class="row"><span class="eyebrow">STOP · SIMULATED ARRIVALS</span>'+
       '<button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>'+
       '<h2>'+esc(stop.properties.name)+'</h2>'+
-      '<p class="station-subtitle">Bus lines at this stop · next 20 minutes</p>'+
+      '<p class="station-subtitle">Mapped lines at or near this stop · next 20 minutes</p>'+
       '<div id="station-service-list" class="station-service-list">'+stationRows(stop)+'</div>'+
       '<p class="station-note">Demo estimates only. Not live GPS or an official timetable.</p>';
     sheet.classList.add("station-sheet","has-selection");

@@ -1273,3 +1273,7 @@ button.network-line:active{transform:scale(.98);}
 @media (prefers-reduced-motion:reduce){
   .leaflet-marker-icon.stop-marker::after{transition:none!important;}
 }
+
+/* An OSM road drawn near a stop is a proximity hint, not verified service. */
+.station-nearby{background:var(--paper);border-color:var(--line);opacity:.9;}
+.station-nearby .station-service-details small{line-height:1.35;}

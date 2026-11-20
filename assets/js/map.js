@@ -2,8 +2,10 @@ import { state, persist, esc } from "./state.js";
 import { createSimulation } from "./simulation.js";
 import { translate } from "./i18n.js";
 import { colorForLine, lineStyle } from "./line-colors.js";
+import { updateStopCoverage, stopSelectedForLines, routeNearbyLines } from "./stop-coverage.js";
 let map, fragmentLayer, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
+const NO_FRAGMENTS = [];
 let stopMarkersVisible = 0;
 let viewportBounds = null;
 let choose = () => {};
@@ -121,6 +123,7 @@ export function initMap(onChoose) {
 }
 export function refreshLayers() {
   if (!map) return;
+  updateStopCoverage(state.stops,state.routes,state.fragments||NO_FRAGMENTS);
   routeLayer.clearLayers();
   fragmentLayer.clearLayers();
   stopLayer.clearLayers();
@@ -166,7 +169,7 @@ function refreshStopMarkers(){
   const selected = new Set(state.prefs.lines);
   const bounds=map.getBounds().pad(.23);
   const visible=state.stops.filter(stop=>{
-    const active=stop.properties.lines.some(id=>selected.has(id));
+    const active=stopSelectedForLines(stop,selected);
     const pos=[stop.geometry.coordinates[1],stop.geometry.coordinates[0]];
     // Reveal all stations when zoomed in; otherwise prioritize those
     // served by the selected bus lines to limit marker overlap.
@@ -177,17 +180,21 @@ function refreshStopMarkers(){
     return Number(bb)-Number(aa);
   }).slice(0,190);
   for(const stop of visible){
-    const served=stop.properties.lines.some(id=>selected.has(id));
-    const names=stop.properties.lines.length
-      ? " · lines " + stop.properties.lines.join(", ")
-      : " · line assignment unavailable";
+    const served=stopSelectedForLines(stop,selected);
+    const near = routeNearbyLines(stop).filter(id=>selected.has(id));
+    const names = stop.properties.lines.length
+      ? " · assigned lines " + stop.properties.lines.join(", ")
+      : " · no confirmed route assignment";
+    const nearbyNote=near.length
+      ? " · mapped road near lines "+near.join(", ")+" (boarding unverified)"
+      : "";
     const marker=L.marker(
       [stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{
         icon:L.divIcon({
           className:"stop-marker "+(served?"stop-marker-served":"stop-marker-unselected"),
           iconSize:[30,30],iconAnchor:[15,15]
         }),
-        title:stop.properties.name+names,
+        title:stop.properties.name+names+nearbyNote,
         keyboard:true,
         zIndexOffset:served?240:20
       }
