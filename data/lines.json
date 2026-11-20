@@ -65,13 +65,13 @@
   {
     "id": "3B",
     "from": "Bërnicë e Ulët",
-    "to": "Mat (Rrethi i Matit",
+    "to": "Mat (Rrethi i Matit)",
     "partial": true,
     "relation": 10187116,
     "mappedSegmentStart": "Katedralja (N.kalim)",
     "mappedSegmentEnd": "Bërnice e Poshtme",
     "officialFrom": "Bërnicë e Ulët",
-    "officialTo": "Mat (Rrethi i Matit",
+    "officialTo": "Mat (Rrethi i Matit)",
     "terminiSource": "osm-relation-tags"
   },
   {
@@ -139,9 +139,9 @@
   },
   {
     "id": "7A",
-    "from": "Vreshtat (Rr. Xhavit Ahmeti",
+    "from": "Vreshtat (Rr. Xhavit Ahmeti)",
     "to": "Rrethi i Flamurit",
-    "officialFrom": "Vreshtat (Rr. Xhavit Ahmeti",
+    "officialFrom": "Vreshtat (Rr. Xhavit Ahmeti)",
     "officialTo": "Rrethi i Flamurit",
     "relation": 10247951,
     "partial": true,
@@ -166,14 +166,14 @@
   },
   {
     "id": "7C",
-    "from": "Kalabri (Emshir",
-    "to": "Qender - back to Kalabri (Emshir",
+    "from": "Kalabri (Emshir)",
+    "to": "Qender - back to Kalabri (Emshir)",
     "partial": true,
     "relation": 11160278,
     "mappedSegmentStart": "Sh. M. L. Ekonomike",
     "mappedSegmentEnd": "Përballë Kopshitit \"Cicërimat\"",
-    "officialFrom": "Kalabri (Emshir",
-    "officialTo": "Qender - back to Kalabri (Emshir",
+    "officialFrom": "Kalabri (Emshir)",
+    "officialTo": "Qender - back to Kalabri (Emshir)",
     "terminiSource": "osm-relation-tags"
   },
   {
