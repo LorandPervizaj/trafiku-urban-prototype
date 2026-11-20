@@ -3,6 +3,7 @@ import { createSimulation } from "./simulation.js";
 import { translate } from "./i18n.js";
 let map, routeLayer, stopLayer, busLayer, simulation, preview;
 const markers = new Map();
+let stopMarkersVisible = 0;
 let choose = () => {};
 export function initMap(onChoose) {
   choose = onChoose;
@@ -42,6 +43,7 @@ export function initMap(onChoose) {
   busLayer = L.layerGroup().addTo(map);
   map.on("click", () => choose({ type: "clear" }));
   map.on("moveend", () => {
+    refreshStopMarkers();
     const c = map.getCenter();
     state.prefs.position = [c.lat, c.lng, map.getZoom()];
     persist();
@@ -90,9 +92,14 @@ export function initMap(onChoose) {
     if (b.position) marker.setLatLng([b.position[1], b.position[0]]);
     const el = marker.getElement();
     if (el) {
-      el.setAttribute("aria-label", translate(`Simulated bus ${b.id}`, state.prefs.language));
-      el.title = translate(`Line ${b.line} · ${b.movementState} · ${b.direction === 1 ? "outbound" : "return demonstration"}`, state.prefs.language);
-      el.style.setProperty("--heading", `${b.heading}deg`);
+      // Accessibility attributes only change on state/language changes, not every frame.
+      const status=`${b.movementState}:${b.direction}:${state.prefs.language}`;
+      if(el.dataset.lastStatus!==status){
+        el.setAttribute("aria-label",translate(`Simulated bus ${b.id}`,state.prefs.language));
+        el.title=translate(`Line ${b.line} · ${b.movementState} · ${b.direction === 1 ? "outbound" : "return demonstration"}`,state.prefs.language);
+        el.dataset.lastStatus=status;
+      }
+      el.style.setProperty("--heading",`${b.heading}deg`);
     }
   });
   state.buses = simulation.buses;
@@ -111,26 +118,38 @@ export function refreshLayers() {
           opacity: 0.8,
         },
       }).addTo(routeLayer);
-  for (const stop of state.stops)
-    if (
-      state.prefs.showStops &&
-      stop.properties.lines.some((l) => state.prefs.lines.includes(l))
-    )
-      L.marker([stop.geometry.coordinates[1], stop.geometry.coordinates[0]], {
-        icon: L.divIcon({ className: "stop-marker", iconSize: [30, 30], iconAnchor: [15, 15] }),
-        title: stop.properties.name,
-      })
-        .on("click", () => {
-          if (!state.prefs.reducedMotion && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            map.panTo([stop.geometry.coordinates[1], stop.geometry.coordinates[0]], {animate:true, duration:0.28});
-          }
-          choose({ type: "stop", stop });
-        })
-        .addTo(stopLayer);
+  refreshStopMarkers();
   for (const [id, m] of markers) {
     const line = id.split("-")[0];
     if (state.prefs.lines.includes(line)) busLayer.addLayer(m);
     else busLayer.removeLayer(m);
+  }
+}
+function refreshStopMarkers(){
+  if(!map || !stopLayer)return;
+  stopLayer.clearLayers();
+  stopMarkersVisible=0;
+  if(!state.prefs.showStops)return;
+  const zoom=map.getZoom();
+  if(zoom<12.7)return;
+  const bounds=map.getBounds().pad(.23);
+  const visible=state.stops.filter(stop=>
+    bounds.contains([stop.geometry.coordinates[1],stop.geometry.coordinates[0]]) &&
+    (zoom>=13.7 || stop.properties.lines.length)
+  ).slice(0,180);
+  for(const stop of visible){
+    const unassigned=!stop.properties.lines.length;
+    L.marker([stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{
+      icon:L.divIcon({className:unassigned?"stop-marker stop-marker-unassigned":"stop-marker",
+        iconSize:[30,30],iconAnchor:[15,15]}),
+      title:stop.properties.name,
+      keyboard:true
+    }).on("click",()=>{
+      if(!state.prefs.reducedMotion && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+        map.panTo([stop.geometry.coordinates[1],stop.geometry.coordinates[0]],{animate:true,duration:.28});
+      choose({type:"stop",stop});
+    }).addTo(stopLayer);
+    stopMarkersVisible++;
   }
 }
 export function recenter() {

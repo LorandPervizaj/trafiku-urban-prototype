@@ -21,13 +21,16 @@ jobs:
       - name: Check JavaScript and Python syntax
         run: |
           for f in assets/js/*.js assets/js/ui/*.js tests/*.js tests/*.mjs; do node --check "$f"; done
-          python3 -m py_compile tests/expand-lines.py
+          python3 -m py_compile tests/expand-lines.py tests/enrich-stops.py
       - name: Validate deterministic simulation and dataset
         run: |
           node tests/unit.mjs
           node tests/i18n.mjs
+          node tests/route-search.mjs
       - name: Add additional verified OSM segments when available
         run: python3 tests/expand-lines.py
+      - name: Enrich named OSM bus stops
+        run: python3 tests/enrich-stops.py
       - name: Save verified OSM route snapshot
         shell: bash
         run: |

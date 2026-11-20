@@ -4,7 +4,8 @@ import { icon } from "./icons.js";
 import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
-import { findRoutes } from "./routes.js";
+import { findRoutes, findStop } from "./routes.js";
+import { resolvePlace } from "./place-search.js";
 import {
   initMap,
   refreshLayers,
@@ -23,6 +24,8 @@ function applyLanguage() {
   const language=state.prefs.language || "en";
   document.documentElement.lang=language === "sq" ? "sq" : "en";
   document.title="TRIP · Prishtina";
+  const langToggle=document.querySelector("#lang-toggle");
+  if(langToggle)langToggle.dataset.current=language;
   document.querySelectorAll("#lang-toggle [data-lang]").forEach(b=>{
     b.setAttribute("aria-pressed", String(b.dataset.lang === language));
   });
@@ -48,10 +51,24 @@ function savePrefs() {
 function filters() {
   const ids=state.lines.map(l=>l.id);
   const allOn=ids.length>0 && ids.every(id=>state.prefs.lines.includes(id));
-  $("#filters").innerHTML=`<button class="chip" data-filter="all" aria-pressed="${allOn}" aria-label="All">All</button>`+
-    ids.map(id=>`<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("");
+  const container=$("#filters");
+  const expected=ids.length+1;
+  if(container.children.length!==expected ||
+    !Array.from(container.children).slice(1).every((el,i)=>el.dataset.filter===ids[i])) {
+    container.innerHTML=`<button class="chip chip-all" data-filter="all" aria-pressed="${allOn}">All</button>`+
+      ids.map(id=>`<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("");
+  }
+  const toggle=container.querySelector('[data-filter="all"]');
+  toggle.textContent=allOn?"None":"All";
+  toggle.setAttribute("aria-pressed",String(allOn));
+  toggle.setAttribute("aria-label",allOn?"None":"All");
+  toggle.dataset.allState=allOn?"all":"partial";
+  for(const element of container.querySelectorAll('[data-filter]:not([data-filter="all"])')) {
+    const selected=state.prefs.lines.includes(element.dataset.filter);
+    element.setAttribute("aria-pressed",String(selected));
+  }
   $("#stops-toggle").setAttribute("aria-pressed",state.prefs.showStops);
-  localize($("#filters"),state.prefs.language);
+  localize(container,state.prefs.language);
 }
 function prepareJourney(stop, line, reverse = false) {
   // A stop at the segment endpoint boards the illustrative return direction.
@@ -92,6 +109,21 @@ function renderSheet(selection) {
     },null);
     heading="BUS ON MAP";
     title=`Line ${selection.bus.line}`;
+  }
+  if(!line && selection.type==="stop") {
+    sheetContext=null;
+    $("#sheet-content").innerHTML=`<div class="row"><span class="eyebrow">MAPPED BUS STOP</span>
+      <button class="sheet-close" data-action="dismiss-sheet" aria-label="Close details">×</button></div>
+      <h2>${esc(stop.properties.name)}</h2>
+      <p class="unassigned-note">This stop is mapped in OpenStreetMap, but its bus lines are not verified.</p>
+      <button class="button secondary" data-action="plan">Search a journey</button>`;
+    sheet.hidden=false;
+    sheet.classList.add("has-selection");
+    screen.dataset.sheet="selected";
+    sheet.classList.remove("collapsed");
+    $(".sheet-handle").setAttribute("aria-expanded","true");
+    applyLanguage();
+    return;
   }
   if(!line){activeSelection=null;renderSheet({type:"clear"});return;}
   let reverse=selection.type==="bus"&&selection.bus.direction===-1;
@@ -146,15 +178,41 @@ async function render(view) {
   if (view === "details")
     drawPreview($("#preview"), state.selected?.id, screens.selectedStop());
   if (view === "plan")
-    $("#journey-form").addEventListener("submit", (e) => {
+    $("#journey-form").addEventListener("submit", async e => {
       e.preventDefault();
-      const data = new FormData(e.target);
-      state.journey = {
-        from: String(data.get("from")).trim(),
-        to: String(data.get("to")).trim(),
-      };
-      document.activeElement?.blur();
-      navigate("routes");
+      const f=e.currentTarget;
+      const from=String(f.elements.from.value).trim();
+      const to=String(f.elements.to.value).trim();
+      const msg=$("#search-feedback");
+      const btn=f.querySelector('[type="submit"]');
+      btn.disabled=true;
+      msg.hidden=false;
+      msg.textContent="Finding nearby stops…";
+      state.lookup=null;
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),6500);
+      try {
+        const start=await resolvePlace(from,state.stops,controller.signal);
+        const finish=await resolvePlace(to,state.stops,controller.signal);
+        state.lookup={from:start,to:finish};
+        state.journey={from,to};
+        const routes=findRoutes(from,to);
+        if(!routes.length) {
+          msg.textContent="We found the places, but have no mapped bus connection between them yet. Try another stop.";
+          localize(msg,state.prefs.language);
+          return;
+        }
+        document.activeElement?.blur();
+        navigate("routes");
+      } catch(error) {
+        msg.textContent=error.name==="AbortError"?
+          "Place search timed out. Choose a named bus stop or try again.":
+          (error.message || "Place search is unavailable. Try a named stop.");
+        localize(msg,state.prefs.language);
+      } finally {
+        clearTimeout(timeout);
+        btn.disabled=false;
+      }
     });
   applyLanguage();
 }
@@ -162,13 +220,18 @@ function selectStop(id) {
   const s = state.stops.find((s) => s.properties.id === id);
   if (!s) return;
   const line = state.lines.find((l) => l.id === s.properties.lines[0]);
+  if(!line) {
+    state.journey={from:s.properties.name,to:""};
+    state.lookup=null;
+    navigate("plan");
+    return;
+  }
   prepareJourney(s, line);
   navigate("details");
 }
 function openSettings() {
-  $("#settings-dialog").innerHTML = screens.settings();
-  $("#settings-dialog").showModal();
-  applyLanguage();
+  if(state.view!=="settings")state.returnView=state.view;
+  navigate("settings");
 }
 document.addEventListener("click", (e) => {
   const language=e.target.closest("[data-lang]");
@@ -212,6 +275,10 @@ document.addEventListener("click", (e) => {
   if (saved) {
     const s = state.prefs.saved[Number(saved.dataset.saved)];
     state.journey = { from: s.from, to: s.to };
+    state.lookup = s.fromStop && s.toStop ? {
+      from:{query:s.from,stop:state.stops.find(x=>x.properties.id===s.fromStop)},
+      to:{query:s.to,stop:state.stops.find(x=>x.properties.id===s.toStop)}
+    }:null;
     state.selected = findRoutes(s.from, s.to).find((l) => l.id === s.line);
     navigate("details");
     return;
@@ -240,6 +307,7 @@ document.addEventListener("click", (e) => {
     return;
   }
   if (a === "open-settings") { openSettings(); return; }
+  if (a === "settings-back" || a === "close-settings") { navigate(state.returnView || "map"); return; }
   if (a === "dismiss-sheet") { renderSheet({type:"clear"}); return; }
   if (a === "back") {
     navigate(state.view === "details" ? "routes" : "plan");
@@ -251,7 +319,9 @@ document.addEventListener("click", (e) => {
     f.elements.to.value = a;
   }
   if (a === "save") {
-    const s = { ...state.journey, line: state.selected.id };
+    const s = { ...state.journey, line: state.selected.id,
+      fromStop: findStop(state.journey.from)?.properties.id,
+      toStop: findStop(state.journey.to)?.properties.id };
     if (
       !state.prefs.saved.some(
         (x) => x.from === s.from && x.to === s.to && x.line === s.line,
@@ -272,7 +342,7 @@ document.addEventListener("click", (e) => {
     render("details");
     toast("Saved stops updated");
   }
-  if (a === "close-settings") $("#settings-dialog").close();
+
   if (a === "reset-simulation") {
     resetSimulation();
     toast("Simulation restarted");
@@ -290,14 +360,13 @@ document.addEventListener("click", (e) => {
     applyTheme();
     filters();
     refreshLayers();
-    $("#settings-dialog").close();
     render(state.view);
     toast("Preferences reset");
   }
 });
 document.addEventListener("change", (e) => {
   const el = e.target;
-  if (el.id === "language") {setLanguage(el.value); return;}
+  if (el.id === "language") {setLanguage(el.value);return;}
   if (el.id === "theme") {
     state.prefs.theme = el.value;
     applyTheme();
@@ -307,7 +376,7 @@ document.addEventListener("change", (e) => {
   if (el.id === "reduce-motion") state.prefs.reducedMotion = el.checked;
   if (el.id === "departure-mode") {
     state.departureMode = el.value;
-    render(state.view);
+    if(state.view!=="settings")render(state.view);
   }
   if (["theme", "show-stops", "show-routes", "reduce-motion"].includes(el.id)) {
     savePrefs();

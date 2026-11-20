@@ -107,3 +107,12 @@ Official operator fare notice effective **1 July 2026**: https://trafikurban-pr.
 The current local map dataset includes **all nine lines listed on Trafiku Urban's published operator schedule**: 1, 1A, 3, 3B, 3C, 4, 7C, 15 and 19. The newly mapped partial segments are 1A (7.2 km / two named stops) and 15 (21.7 km / 20 named stops). Mapped routes may omit portions of an official itinerary. The 42 vehicle markers are **simulated demo vehicles**, not a real fleet count or location feed.
 
 The English/Albanian toggle persists in localStorage, the **All** chip toggles between every line and none, and the map launches without a bottom card until a vehicle or stop is selected. Ticket prices are verified from the operator's July 2026 announcement.
+
+
+## Search, stop coverage and settings (November 2026)
+
+- Settings is an in-app screen (#settings), opened from a gear icon and returned from using Back. It does not use a browser-like modal.
+- English/Albanian language changes and filter toggles animate gently with preserved DOM nodes; the main All/None button switches its label in both languages.
+- The Plan search understands loose/missing punctuation (e.g. **Rrethi 24h** and **Furra Saranda**) and supports an illustrative single walking transfer (maximum 400 m straight-line between mapped stops). It does **not** compute pedestrian streets, traffic, service timetables or exact walking time. General place queries use local stop search first and optional OpenStreetMap Photon on submission only, and can use the nearest known stop within 1 km. Photon may be unavailable or rate-limit; local mapped-stop searches still work.
+- The stop map expands beyond route-attached stations when an independently named OSM bus stop is published. Unassigned stops are displayed in muted gray and do not invent a served line. Only viewport stops are rendered, and the dataset is still incomplete.
+- The Kuleta Digjitale card references the app's actual App Store icon; the external image requires internet. Ticket payment still takes place only in the official wallet.

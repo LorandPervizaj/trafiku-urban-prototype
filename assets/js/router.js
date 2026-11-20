@@ -1,4 +1,4 @@
-const allowed = ["map", "plan", "routes", "details", "saved", "ticket"];
+const allowed = ["map", "plan", "routes", "details", "saved", "ticket", "settings"];
 export function navigate(view) {
   if (location.hash !== `#${view}`) location.hash = view;
   else window.dispatchEvent(new HashChangeEvent("hashchange"));
