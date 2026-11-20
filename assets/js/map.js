@@ -175,10 +175,10 @@ function refreshStopMarkers(){
     // served by the selected bus lines to limit marker overlap.
     return bounds.contains(pos) && (zoom>=13.2 || active);
   }).sort((a,b)=>{
-    const aa=a.properties.lines.some(id=>selected.has(id));
-    const bb=b.properties.lines.some(id=>selected.has(id));
+    const aa=stopSelectedForLines(a,selected);
+    const bb=stopSelectedForLines(b,selected);
     return Number(bb)-Number(aa);
-  }).slice(0,190);
+  }).slice(0,300);
   for(const stop of visible){
     const served=stopSelectedForLines(stop,selected);
     const near = routeNearbyLines(stop).filter(id=>selected.has(id));

@@ -3,7 +3,8 @@ import { storageAvailable } from "./storage.js";
 import { icon } from "./icons.js";
 import { lineStyle } from "./line-colors.js";
 import { stopArrivalBoard, arrivalLabel } from "./stop-arrivals.js";
-import { routeNearbyLines } from "./stop-coverage.js";
+import { routeNearbyLines, stopSelectedForLines } from "./stop-coverage.js";
+import { nextLineSelection } from "./line-selection.js";
 import { localize } from "./i18n.js";
 import { navigate, startRouter } from "./router.js";
 import { departure } from "./departures.js";
@@ -311,21 +312,14 @@ document.addEventListener("click", (e) => {
   if (filter) {
     const id = filter.dataset.filter;
     const available=state.lines.map(l=>l.id);
-    if(id==="all") {
-      const allOn=available.length>0 && available.every(x=>state.prefs.lines.includes(x));
-      state.prefs.lines=allOn ? [] : available;
-    } else {
-      state.prefs.lines=state.prefs.lines.includes(id)
-        ? state.prefs.lines.filter(x=>x!==id)
-        : [...state.prefs.lines,id];
-    }
+    state.prefs.lines=nextLineSelection(available,state.prefs.lines,id);
     state.prefs.allLines=available.length>0 && available.every(x=>state.prefs.lines.includes(x));
     savePrefs();
     filters();
     refreshLayers();
     if (!state.prefs.lines.length) activeSelection=null;
     else if (activeSelection?.type === "bus" && !state.prefs.lines.includes(activeSelection.bus.line)) activeSelection=null;
-    else if (activeSelection?.type === "stop" && !activeSelection.stop.properties.lines.some(line=>state.prefs.lines.includes(line))) activeSelection=null;
+    else if (activeSelection?.type === "stop" && !stopSelectedForLines(activeSelection.stop,new Set(state.prefs.lines))) activeSelection=null;
     renderSheet();
     return;
   }

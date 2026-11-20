@@ -4,7 +4,8 @@
 // there. Keep explicit OSM stop/line relationships separate from inferred
 // nearby roads. Nearby lines affect only visual focus and are identified
 // separately in the station panel; no ETAs are invented for them.
-const THRESHOLD_METERS = 25;
+const THRESHOLD_METERS = 125;
+const PAIR_DISTANCE_METERS = 220;
 const METERS_LAT = 111320;
 let cache = null;
 let sourceStops, sourceRoutes, sourceFragments;
@@ -53,25 +54,68 @@ function stopKey(stop) {
   return String(stop?.properties?.id ?? stop?.geometry?.coordinates?.join(",") ?? "");
 }
 
+function stopNameKey(name) {
+  return String(name||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/\([^)]*\)/g," ")
+    .replace(/\b(perballe|perball|nkalim|n|kalim|stacioni|rruga|rr)\b/g," ")
+    .replace(/[^a-z0-9]+/g," ").trim();
+}
+function distanceMeters(a,b) {
+  const latitude=(a[1]+b[1])/2*Math.PI/180;
+  return Math.hypot(
+    (a[0]-b[0])*METERS_LAT*Math.cos(latitude),
+    (a[1]-b[1])*METERS_LAT
+  );
+}
+
 export function updateStopCoverage(stops=[],routes=[],fragments=[],threshold=THRESHOLD_METERS) {
-  if (cache && sourceStops===stops && sourceRoutes===routes &&
-      sourceFragments===fragments && cache.threshold===threshold) return;
-  sourceStops=stops; sourceRoutes=routes; sourceFragments=fragments;
-  const byLine=new Map(), inferred=new Map();
-  for(const f of [...routes,...fragments]) {
-    if (typeof f?.properties?.line !== "string") continue;
+  if(cache && sourceStops===stops && sourceRoutes===routes &&
+     sourceFragments===fragments && cache.threshold===threshold)return;
+  sourceStops=stops;sourceRoutes=routes;sourceFragments=fragments;
+  const byLine=new Map(),inferred=new Map();
+  for(const f of [...routes,...fragments]){
+    if(typeof f?.properties?.line!=="string")continue;
     addGeometry(byLine,f.properties.line,f.geometry,threshold);
   }
-  for(const stop of stops) {
+  // A road corridor is symmetrical: stops on BOTH sides count as near
+  // the drawn route. Proximity is visual only, not boarding evidence.
+  const keyedStops=[];
+  for(const stop of stops){
     const point=stop?.geometry?.coordinates;
-    if(!point || point.length!==2 || !point.every(Number.isFinite))continue;
+    if(!point||point.length!==2||!point.every(Number.isFinite))continue;
     const explicit=new Set(stop.properties?.lines||[]);
-    const nearby=[];
-    for(const [id,segments] of byLine) {
-      if(explicit.has(id)) continue;
-      if(closeToLine(point,segments,threshold))nearby.push(id);
+    const nearby=new Set();
+    for(const [id,segments] of byLine){
+      if(!explicit.has(id)&&closeToLine(point,segments,threshold))nearby.add(id);
     }
-    if(nearby.length)inferred.set(stopKey(stop),new Set(nearby));
+    if(nearby.size)inferred.set(stopKey(stop),nearby);
+    keyedStops.push({
+      stop,point,name:stopNameKey(stop.properties?.name),
+      lines:new Set([...explicit,...nearby])
+    });
+  }
+  // If OSM models two platforms on opposite sides of a street with
+  // matching names, associate the unassigned side visually as well.
+  // Never mutate stop.properties.lines or create arrival estimates.
+  const byName=new Map();
+  for(const item of keyedStops){
+    if(item.name.length<3)continue;
+    if(!byName.has(item.name))byName.set(item.name,[]);
+    byName.get(item.name).push(item);
+  }
+  for(const group of byName.values()){
+    if(group.length<2)continue;
+    for(const item of group){
+      for(const other of group){
+        if(other===item ||
+           distanceMeters(item.point,other.point)>PAIR_DISTANCE_METERS)continue;
+        const existing=new Set(item.stop.properties?.lines||[]);
+        const near=inferred.get(stopKey(item.stop))||new Set();
+        for(const line of other.lines)if(!existing.has(line))near.add(line);
+        if(near.size)inferred.set(stopKey(item.stop),near);
+      }
+    }
   }
   cache={inferred,threshold};
 }

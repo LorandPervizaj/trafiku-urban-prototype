@@ -163,3 +163,10 @@ simulation-based arrivals within the next 20 minutes for each service.
 The panel refreshes roughly every ten seconds. A missing mapped route or a
 station too far from an existing continuous road segment displays no ETA.
 Everything is a demonstration, never live tracking or a real timetable.
+
+
+## November 2026: black stations on both sides of selected streets
+
+The station-marker corridor is symmetric around every selected route geometry (including separately mapped return directions and disconnected OSM road members). Its approximate **125-metre visual buffer** includes both sides of wider streets, and stops with matching names within 220 m can inherit visual highlighting from their counterpart on the opposite side. This is deliberately a visual focus rule and **not** a new source of verified boarding information. Route-near-only stations remain labeled “Route passes nearby · stop not verified” without manufactured ETAs. A line chip tapped while All is active now **focuses that line exclusively**; additional taps allow comparison, while All/None still toggles the full network. Selected and route-near markers are prioritized in viewport rendering.
+
+There is currently no independently mapped N1 line in the TRIP local data; Line 1 is included in the same highlighting system. More route/station verification will be needed to represent missing services or street segments.
