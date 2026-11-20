@@ -1,0 +1,13 @@
+# Architecture
+
+Static HTML, CSS, native ES modules, Leaflet 1.9.4, GeoJSON and local JSON. No runtime package manager, framework, backend, login or remote profile. Local assets load before map tiles. Three small JSON requests load concurrently; the main map is initialized once. Secondary screen templates use a dynamic import after map startup.
+
+The shared `state` object owns preferences, transit data, the current journey and selected route. `storage.js` validates a version-1 schema and catches blocked, corrupted or quota-exceeded storage. Preferences are in memory if persistence is unavailable. `router.js` uses hash history for static-host compatibility and native back navigation. Main view changes preserve the main Leaflet instance; inset previews are disposed with animation disabled to avoid stale Leaflet zoom callbacks.
+
+The simulation precomputes cumulative distances and interpolates by binary search along each route. Each vehicle has an ID, line, direction, offset, progress, speed, heading, next-stop index, ETA and movement state. A route consists of travel legs separated by 12-second stop dwell periods. An eased distance fraction accelerates/decelerates at each leg boundary. A complete out-and-return cycle reverses at clipped endpoints without teleportation. The reverse service is illustrative. All nine markers use one requestAnimationFrame loop. Visibility changes cancel the frame, then resume from elapsed time so hidden tabs do no animation work. Bus headings are represented by a small directional indicator; the bus glyph stays upright. Live departure estimates approximate simulated travel to the chosen origin; they are not a calibrated transport prediction model. Scheduled mode uses a labeled illustrative 12-minute timetable example.
+
+Map tiles are viewport requests within city bounds. Grayscale is restricted to the tile pane; routes and buses remain green/dark. The same neutral tiles are retained in dark mode. No map-tile caching, geographic prefetch, analytics or location permission. Favorite stops and essential route information are available as keyboard-accessible lists.
+
+Screen templates escape stored/user strings. Hash routes are allowlisted. External wallet links use noopener/noreferrer. Local schema validation constrains stored preferences; the app does not keep sensitive information. Only a public static site is deployed.
+
+The code favors a few readable modules over an abstraction framework. Browser QA is a development CLI script; deterministic tests use Node built-ins. Packaging copies only index.html, assets and normalized transit data, excluding raw OSM snapshots, documentation, screenshots and reference PDFs from the public web bundle.

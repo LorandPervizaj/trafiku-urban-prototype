@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#17624D" />
+    <meta
+      name="description"
+      content="Find your bus, confirm your stop, and reach the official Prishtina city wallet. Interactive student prototype."
+    />
+    <title>Trafiku Urban · Prishtina</title>
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/vendor/leaflet.css" />
+    <link rel="stylesheet" href="assets/css/app.css" />
+    <script defer src="assets/vendor/leaflet.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
+  </head>
+  <body>
+    <aside class="desktop-brand">
+      <a class="wordmark" href="#map"
+        ><span class="brand-symbol">⌁</span> trafiku<span
+          >URBAN / PRISHTINA</span
+        ></a
+      >
+      <p>A simpler way to<br />move through the city.</p>
+      <small
+        >RIT KOSOVO · INTERACTIVE PROTOTYPE<br />Lorand Pervizaj / Donat
+        Bojaj</small
+      >
+    </aside>
+    <main id="app">
+      <section id="map-screen" aria-label="Prishtina bus map">
+        <div id="map"></div>
+        <header class="map-header">
+          <div>
+            <span class="eyebrow">TRAFIKU URBAN</span>
+            <h1>Prishtina</h1>
+            <p>Find your next connection.</p>
+          </div>
+          <button
+            class="icon-button"
+            id="settings"
+            aria-label="Open map settings"
+          ></button>
+        </header>
+        <div class="filter-panel">
+          <span class="eyebrow">SHOW LINES</span>
+          <div id="filters" role="group" aria-label="Visible bus lines"></div>
+        </div>
+        <div class="demo-pill">Demo mode · Simulated buses</div>
+        <div class="map-tools">
+          <button
+            class="icon-button"
+            id="stops-toggle"
+            aria-label="Toggle stop markers"
+          ></button
+          ><button
+            class="icon-button"
+            id="recenter"
+            aria-label="Recenter on Prishtina"
+          ></button>
+        </div>
+        <p id="map-warning" class="map-warning" hidden></p>
+        <section
+          id="stop-sheet"
+          class="stop-sheet"
+          aria-label="Nearby departures"
+        >
+          <button
+            class="sheet-handle"
+            aria-label="Collapse nearby departures"
+            aria-expanded="true"
+          >
+            <span></span>
+          </button>
+          <div id="sheet-content"><div class="skeleton"></div></div>
+        </section>
+      </section>
+      <section id="page" hidden></section>
+      <nav id="navigation" aria-label="Main navigation"></nav>
+      <dialog id="settings-dialog" aria-labelledby="settings-title"></dialog>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="connection" role="status" hidden>
+        Offline · Local routes remain available. Map tiles need internet.
+      </div>
+    </main>
+  </body>
+</html>

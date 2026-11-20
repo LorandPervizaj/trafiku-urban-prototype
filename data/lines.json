@@ -1,0 +1,29 @@
+[
+  {
+    "id": "4",
+    "from": "Parku i Gërmise",
+    "to": "Pejton përballë ish - Ramiz Sadikut",
+    "officialFrom": "Xhamia në Mat",
+    "officialTo": "Parku i Gërmisë",
+    "partial": true,
+    "relation": 10120493
+  },
+  {
+    "id": "3",
+    "from": "Bardhosh, tek Kroi",
+    "to": "Pejton përballë ish - Ramiz Sadikut",
+    "officialFrom": "Rrethi i Matit",
+    "officialTo": "Bardhosh, tek Kroi",
+    "partial": true,
+    "relation": 11153998
+  },
+  {
+    "id": "1",
+    "from": "Dardani \"Ibër-Lepenci\"",
+    "to": "Rrethi \"Maxi 24h\" (Rr.B)",
+    "officialFrom": "St. Hekurudhor",
+    "officialTo": "Royal Mall",
+    "partial": true,
+    "relation": 10120831
+  }
+]

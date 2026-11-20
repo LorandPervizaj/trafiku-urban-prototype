@@ -1,0 +1,9 @@
+{
+  "name": "trafiku-urban-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/unit.mjs",
+    "package": "python tests/package-site.py"
+  }
+}

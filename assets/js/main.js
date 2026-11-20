@@ -1,0 +1,371 @@
+import { state, persist, reset, applyTheme, esc } from "./state.js";
+import { storageAvailable } from "./storage.js";
+import { icon } from "./icons.js";
+import { navigate, startRouter } from "./router.js";
+import { departure } from "./departures.js";
+import { findRoutes } from "./routes.js";
+import {
+  initMap,
+  refreshLayers,
+  recenter,
+  showMap,
+  drawPreview,
+  clearPreview,
+  resetSimulation,
+} from "./map.js";
+let screens;
+const $ = (s) => document.querySelector(s);
+let toastTimer;
+let sheetContext;
+export function toast(text) {
+  $("#toast").textContent = text;
+  $("#toast").classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
+}
+function savePrefs() {
+  if (!persist())
+    toast("Storage unavailable. Changes last for this visit only.");
+}
+function filters() {
+  const ids = state.lines.map((l) => l.id);
+  $("#filters").innerHTML =
+    `<button class="chip" data-filter="all" aria-pressed="${state.prefs.lines.length === ids.length}">All</button>${ids.map((id) => `<button class="chip" data-filter="${id}" aria-pressed="${state.prefs.lines.includes(id)}">${id}</button>`).join("")}<button class="chip" data-filter="none" aria-pressed="${!state.prefs.lines.length}">None</button>`;
+  $("#stops-toggle").setAttribute("aria-pressed", state.prefs.showStops);
+}
+function renderSheet(selection) {
+  let stop =
+      state.stops.find((s) => s.properties.name === "Hotel Prishtina") ||
+      state.stops[0],
+    line = state.lines[0],
+    heading = "NEARBY · CITY CENTRE",
+    title = stop?.properties.name || "Local routes";
+  if (selection?.type === "stop") {
+    stop = selection.stop;
+    line = state.lines.find((l) => l.id === stop.properties.lines[0]);
+    heading = "DEPARTURE BOARD";
+    title = stop.properties.name;
+  }
+  if (selection?.type === "bus") {
+    line = state.lines.find((l) => l.id === selection.bus.line);
+    stop = state.stops.find((s) => s.properties.lines.includes(line.id));
+    heading = "SIMULATED VEHICLE";
+    title = `Bus ${selection.bus.id}`;
+  }
+  if (!line) {
+    $("#sheet-content").innerHTML =
+      "<h2>No route data</h2><p>Planning and ticket access remain available.</p>";
+    return;
+  }
+  sheetContext = {
+    line: line.id,
+    origin: stop?.properties.name,
+    reverse: false,
+  };
+  const d = departure(line.id, sheetContext);
+  $("#sheet-content").innerHTML =
+    `<div class="row"><span class="eyebrow">${heading}</span><span class="pill">${state.prefs.lines.length ? state.prefs.lines.length + " lines visible" : "No lines selected"}</span></div><h2>${esc(title)}</h2><button class="departure-row" id="sheet-departure"><span class="line-badge">${line.id}</span><span><b>Line ${line.id} · ${esc(line.to)}</b><small>${d.label}</small></span><span class="time">${d.time}</span></button>`;
+  $("#sheet-departure").onclick = () => {
+    state.journey = {
+      from: stop?.properties.name || "",
+      to:
+        state.stops.filter((s) => s.properties.lines.includes(line.id)).at(-1)
+          ?.properties.name || "",
+    };
+    state.selected = { ...line, direction: line.to };
+    navigate("details");
+  };
+  $("#stop-sheet").classList.remove("collapsed");
+  $(".sheet-handle").setAttribute("aria-expanded", "true");
+  $(".sheet-handle").setAttribute("aria-label", "Collapse nearby departures");
+}
+async function render(view) {
+  if (!screens) screens = await import("./ui/screens.js");
+  clearPreview();
+  state.view = view;
+  $("#map-screen").hidden = view !== "map";
+  $("#page").hidden = view === "map";
+  $("#navigation").innerHTML = ["plan", "map", "ticket"]
+    .map(
+      (v) =>
+        `<a href="#${v}" class="nav-button ${v === "map" ? "map-nav" : ""}" ${v === (["routes", "details", "saved"].includes(view) ? "plan" : view) ? 'aria-current="page"' : ""}><span class="nav-icon">${icon(v)}</span><span>${v[0].toUpperCase() + v.slice(1)}</span></a>`,
+    )
+    .join("");
+  if (view === "map") {
+    showMap();
+    renderSheet();
+    return;
+  }
+  $("#page").innerHTML = screens[view]();
+  $("#page").scrollTop = 0;
+  $("#page h1")?.focus({ preventScroll: true });
+  if (view === "routes") {
+    const result = findRoutes(state.journey.from, state.journey.to)[0];
+    drawPreview($("#preview"), result?.id);
+  }
+  if (view === "details")
+    drawPreview($("#preview"), state.selected?.id, screens.selectedStop());
+  if (view === "plan")
+    $("#journey-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = new FormData(e.target);
+      state.journey = {
+        from: String(data.get("from")).trim(),
+        to: String(data.get("to")).trim(),
+      };
+      document.activeElement?.blur();
+      navigate("routes");
+    });
+}
+function selectStop(id) {
+  const s = state.stops.find((s) => s.properties.id === id);
+  if (!s) return;
+  const line = state.lines.find((l) => l.id === s.properties.lines[0]);
+  state.journey = {
+    from: s.properties.name,
+    to:
+      state.stops.filter((x) => x.properties.lines.includes(line.id)).at(-1)
+        ?.properties.name || line.to,
+  };
+  state.selected = { ...line, direction: line.to };
+  navigate("details");
+}
+function openSettings() {
+  $("#settings-dialog").innerHTML = screens.settings();
+  $("#settings-dialog").showModal();
+}
+document.addEventListener("click", (e) => {
+  const filter = e.target.closest("[data-filter]");
+  if (filter) {
+    const id = filter.dataset.filter;
+    state.prefs.lines =
+      id === "all"
+        ? state.lines.map((l) => l.id)
+        : id === "none"
+          ? []
+          : state.prefs.lines.includes(id)
+            ? state.prefs.lines.filter((x) => x !== id)
+            : [...state.prefs.lines, id];
+    savePrefs();
+    filters();
+    refreshLayers();
+    renderSheet();
+    return;
+  }
+  const line = e.target.closest("[data-line]");
+  if (line) {
+    state.selected = findRoutes(state.journey.from, state.journey.to).find(
+      (l) => l.id === line.dataset.line,
+    );
+    navigate("details");
+    return;
+  }
+  const stop = e.target.closest("[data-stop]");
+  if (stop) {
+    selectStop(stop.dataset.stop);
+    return;
+  }
+  const saved = e.target.closest("[data-saved]");
+  if (saved) {
+    const s = state.prefs.saved[Number(saved.dataset.saved)];
+    state.journey = { from: s.from, to: s.to };
+    state.selected = findRoutes(s.from, s.to).find((l) => l.id === s.line);
+    navigate("details");
+    return;
+  }
+  const del = e.target.closest("[data-delete]");
+  if (del) {
+    state.prefs.saved.splice(Number(del.dataset.delete), 1);
+    savePrefs();
+    render(state.view);
+    toast("Journey removed");
+    return;
+  }
+  const unfav = e.target.closest("[data-unfavorite]");
+  if (unfav) {
+    state.prefs.favorites = state.prefs.favorites.filter(
+      (id) => id !== unfav.dataset.unfavorite,
+    );
+    savePrefs();
+    render(state.view);
+    return;
+  }
+  const a = e.target.closest("[data-action]")?.dataset.action;
+  if (!a) return;
+  if (["plan", "map", "ticket", "routes", "saved"].includes(a)) {
+    navigate(a);
+    return;
+  }
+  if (a === "back") {
+    navigate(state.view === "details" ? "routes" : "plan");
+  }
+  if (a === "swap") {
+    const f = $("#journey-form");
+    const a = f.elements.from.value;
+    f.elements.from.value = f.elements.to.value;
+    f.elements.to.value = a;
+  }
+  if (a === "save") {
+    const s = { ...state.journey, line: state.selected.id };
+    if (
+      !state.prefs.saved.some(
+        (x) => x.from === s.from && x.to === s.to && x.line === s.line,
+      )
+    ) {
+      state.prefs.saved.push(s);
+      savePrefs();
+      toast("Journey saved. Find it in Plan.");
+    } else toast("This journey is already saved.");
+  }
+  if (a === "favorite") {
+    const id = screens.selectedStop()?.properties.id;
+    if (!id) return;
+    state.prefs.favorites = state.prefs.favorites.includes(id)
+      ? state.prefs.favorites.filter((x) => x !== id)
+      : [...state.prefs.favorites, id];
+    savePrefs();
+    render("details");
+    toast("Saved stops updated");
+  }
+  if (a === "close-settings") $("#settings-dialog").close();
+  if (a === "reset-simulation") {
+    resetSimulation();
+    toast("Simulation restarted");
+  }
+  if (a === "clear-saved") {
+    state.prefs.saved = [];
+    savePrefs();
+    toast("Saved journeys cleared");
+  }
+  if (a === "reset-preferences") {
+    reset();
+    applyTheme();
+    filters();
+    refreshLayers();
+    $("#settings-dialog").close();
+    render(state.view);
+    toast("Preferences reset");
+  }
+});
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.id === "theme") {
+    state.prefs.theme = el.value;
+    applyTheme();
+  }
+  if (el.id === "show-stops") state.prefs.showStops = el.checked;
+  if (el.id === "show-routes") state.prefs.showRoutes = el.checked;
+  if (el.id === "reduce-motion") state.prefs.reducedMotion = el.checked;
+  if (el.id === "departure-mode") {
+    state.departureMode = el.value;
+    render(state.view);
+  }
+  if (["theme", "show-stops", "show-routes", "reduce-motion"].includes(el.id)) {
+    savePrefs();
+    filters();
+    refreshLayers();
+    document.documentElement.dataset.reducedMotion = String(
+      state.prefs.reducedMotion,
+    );
+  }
+});
+function connection() {
+  $("#connection").hidden = navigator.onLine;
+}
+window.addEventListener("online", connection);
+window.addEventListener("offline", connection);
+applyTheme();
+connection();
+$("#settings").innerHTML = icon("settings");
+$("#stops-toggle").innerHTML = icon("pin");
+$("#recenter").innerHTML = icon("locate");
+$("#recenter").onclick = recenter;
+$("#stops-toggle").onclick = () => {
+  state.prefs.showStops = !state.prefs.showStops;
+  savePrefs();
+  filters();
+  refreshLayers();
+};
+let touchY = 0;
+$(".sheet-handle").addEventListener("pointerdown", (e) => (touchY = e.clientY));
+$(".sheet-handle").addEventListener("pointerup", (e) => {
+  if (Math.abs(e.clientY - touchY) > 20) {
+    $("#stop-sheet").classList.toggle("collapsed", e.clientY > touchY);
+    $(".sheet-handle").setAttribute(
+      "aria-expanded",
+      !$("#stop-sheet").classList.contains("collapsed"),
+    );
+  }
+});
+$(".sheet-handle").onclick = () => {
+  const expanded = $("#stop-sheet").classList.toggle("collapsed");
+  $(".sheet-handle").setAttribute("aria-expanded", String(!expanded));
+  $(".sheet-handle").setAttribute(
+    "aria-label",
+    expanded ? "Expand nearby departures" : "Collapse nearby departures",
+  );
+};
+async function start() {
+  try {
+    const [lines, stops, routes] = await Promise.all(
+      ["lines.json", "stops.geojson", "routes.geojson"].map(async (f) => {
+        const r = await fetch(`data/${f}`);
+        if (!r.ok) throw Error(`Cannot load ${f}`);
+        return r.json();
+      }),
+    );
+    state.lines = lines;
+    state.stops = stops.features;
+    state.routes = routes.features;
+    state.journey = {
+      from:
+        state.stops.find((s) => s.properties.name === "Hotel Prishtina")
+          ?.properties.name ||
+        state.stops[0]?.properties.name ||
+        "",
+      to:
+        state.stops.find((s) => s.properties.name === "Përballë Europe House")
+          ?.properties.name ||
+        state.stops[1]?.properties.name ||
+        "",
+    };
+    filters();
+    try {
+      initMap((selection) => renderSheet(selection));
+    } catch (error) {
+      $("#map-warning").hidden = false;
+      $("#map-warning").textContent =
+        "Map unavailable. Use Plan for local routes.";
+    }
+    screens = await import("./ui/screens.js");
+    $("#settings").onclick = openSettings;
+    startRouter(render);
+    if (!storageAvailable)
+      toast("Local storage unavailable. Preferences last for this visit.");
+  } catch (error) {
+    $("#sheet-content").innerHTML =
+      "<h2>Route data could not load</h2><p>Serve this app over HTTP, then reload. Ticket information remains available.</p>";
+    screens = await import("./ui/screens.js");
+    $("#settings").onclick = openSettings;
+    startRouter(render);
+  }
+}
+start();
+
+// Refresh only the visible departure label, without replacing cards or user input.
+function refreshDepartureTime() {
+  if (document.hidden) return;
+  if (state.view === "map" && sheetContext) {
+    const label = document.querySelector("#sheet-departure .time");
+    if (label)
+      label.textContent = departure(sheetContext.line, sheetContext).time;
+  }
+  if (state.view === "details" && state.selected) {
+    const label = document.querySelector(".large-time");
+    const value = departure(state.selected.id);
+    if (label && value.mode === "live")
+      label.innerHTML = esc(value.time).replace(" min", " <em>min</em>");
+  }
+}
+setInterval(refreshDepartureTime, 15000);
+document.addEventListener("visibilitychange", refreshDepartureTime);
